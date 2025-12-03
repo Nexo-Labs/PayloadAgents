@@ -7,7 +7,13 @@ export default defineConfig({
     plugins: [
         react(),
         keycloakify({
-            accountThemeImplementation: "none"
+            accountThemeImplementation: "none",
+            startKeycloakOptions: {
+                dockerExtraArgs: [
+                    "-e",
+                    "KC_FEATURES=organization,passkeys,recovery-codes"
+                ]
+            }
         })
     ]
 });
