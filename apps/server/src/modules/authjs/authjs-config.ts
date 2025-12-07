@@ -86,7 +86,7 @@ export const authConfig: NextAuthConfig = {
     async session({ session, token, user, trigger, newSession }) {
       // Pasar el id_token a la sesión para usarlo en el logout
       if (SESSION_STRATEGY === "jwt") {
-        if (token.id_token) {
+        if (token?.id_token) {
           session.id_token = token.id_token as string;
         }
       } else if (SESSION_STRATEGY === "database") {
@@ -101,7 +101,7 @@ export const authConfig: NextAuthConfig = {
 
             if (userRecord?.id_token) {
               session.id_token = userRecord.id_token as string;
-            } else if (token.id_token) {
+            } else if (token?.id_token) {
               // Si no existe id_token en la BD pero está en el token, guardarlo
               // Esto puede pasar en el primer login cuando el usuario se acaba de crear
               try {
