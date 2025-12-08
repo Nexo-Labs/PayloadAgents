@@ -34,7 +34,7 @@ See the [Collections](https://payloadcms.com/docs/configuration/collections) doc
 
 - #### Users
 
-  The `users` collection is auth-enabled and encompasses both app-wide and tenant-scoped users based on the value of their `roles` and `tenants` fields. Users with the role `super-admin` can manage your entire application, while users with the _tenant role_ of `admin` have limited access to the platform and can manage only the tenant(s) they are assigned to, see [Tenants](#tenants) for more details.
+  The `users` collection is auth-enabled and encompasses both app-wide and tenant-scoped users based on the value of their `roles` and `tenants` fields. Users with the role `superadmin` can manage your entire application, while users with the _tenant role_ of `admin` have limited access to the platform and can manage only the tenant(s) they are assigned to, see [Tenants](#tenants) for more details.
 
   For additional help with authentication, see the official [Auth Example](https://github.com/payloadcms/payload/tree/main/examples/cms#readme) or the [Authentication](https://payloadcms.com/docs/authentication/overview#authentication-overview) docs.
 
@@ -56,20 +56,20 @@ For the domain portion of the example to function properly, you will need to add
 
 - #### Pages
 
-  Each page is assigned a `tenant`, which is used to control access and scope API requests. Only users with the `super-admin` role can create pages, and pages are assigned to specific tenants. Other users can view only the pages assigned to the tenant they are associated with.
+  Each page is assigned a `tenant`, which is used to control access and scope API requests. Only users with the `superadmin` role can create pages, and pages are assigned to specific tenants. Other users can view only the pages assigned to the tenant they are associated with.
 
 ## Access control
 
 Basic role-based access control is set up to determine what users can and cannot do based on their roles, which are:
 
-- `super-admin`: They can access the Payload admin panel to manage your multi-tenant application. They can see all tenants and make all operations.
+- `superadmin`: They can access the Payload admin panel to manage your multi-tenant application. They can see all tenants and make all operations.
 - `user`: They can only access the Payload admin panel if they are a tenant-admin, in which case they have a limited access to operations based on their tenant (see below).
 
 This applies to each collection in the following ways:
 
-- `users`: Only super-admins, tenant-admins, and the user themselves can access their profile. Anyone can create a user, but only these admins can delete users. See [Users](#users) for more details.
-- `tenants`: Only super-admins and tenant-admins can read, create, update, or delete tenants. See [Tenants](#tenants) for more details.
-- `pages`: Everyone can access pages, but only super-admins and tenant-admins can create, update, or delete them.
+- `users`: Only superadmins, tenant-admins, and the user themselves can access their profile. Anyone can create a user, but only these admins can delete users. See [Users](#users) for more details.
+- `tenants`: Only superadmins and tenant-admins can read, create, update, or delete tenants. See [Tenants](#tenants) for more details.
+- `pages`: Everyone can access pages, but only superadmins and tenant-admins can create, update, or delete them.
 
 > If you have versions and drafts enabled on your pages, you will need to add additional read access control condition to check the user's tenants that prevents them from accessing draft documents of other tenants.
 

@@ -149,6 +149,10 @@ export interface Tenant {
    * If checked, logging in is not required to read. Useful for building public pages.
    */
   allowPublicRead?: boolean | null;
+  /**
+   * ID de la organizacion en Keycloak (sincronizado automaticamente)
+   */
+  keycloakOrgId?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -163,7 +167,7 @@ export interface User {
   name?: string | null;
   image?: string | null;
   password?: string | null;
-  roles?: ('super-admin' | 'user')[] | null;
+  roles?: ('superadmin' | 'user')[] | null;
   /**
    * OpenID Connect ID Token (usado para logout con Keycloak)
    */
@@ -331,6 +335,7 @@ export interface TenantsSelect<T extends boolean = true> {
   domain?: T;
   slug?: T;
   allowPublicRead?: T;
+  keycloakOrgId?: T;
   updatedAt?: T;
   createdAt?: T;
 }

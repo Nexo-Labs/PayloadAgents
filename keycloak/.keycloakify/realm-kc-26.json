@@ -632,7 +632,7 @@
             ],
             "disableableCredentialTypes": [],
             "requiredActions": [],
-            "realmRoles": ["default-roles-myrealm"],
+            "realmRoles": ["superadmin", "default-roles-myrealm"],
             "clientRoles": {
                 "realm-management": [
                     "manage-users",
@@ -1786,9 +1786,12 @@
                         "introspection.token.claim": "true",
                         "access.token.claim": "true",
                         "claim.name": "realm_access.roles",
+                        "id.token.claim": "true",
                         "jsonType.label": "String",
+                        "lightweight.claim": "false",
                         "multivalued": "true",
-                        "user.attribute": "foo"
+                        "user.attribute": "foo",
+                        "userinfo.token.claim": "true"
                     }
                 },
                 {
@@ -1812,9 +1815,12 @@
                         "introspection.token.claim": "true",
                         "access.token.claim": "true",
                         "claim.name": "resource_access.${client_id}.roles",
+                        "id.token.claim": "true",
                         "jsonType.label": "String",
+                        "lightweight.claim": "false",
                         "multivalued": "true",
-                        "user.attribute": "foo"
+                        "user.attribute": "foo",
+                        "userinfo.token.claim": "true"
                     }
                 }
             ]
@@ -1877,14 +1883,14 @@
                 "subComponents": {},
                 "config": {
                     "allowed-protocol-mapper-types": [
-                        "saml-role-list-mapper",
-                        "oidc-address-mapper",
-                        "saml-user-property-mapper",
-                        "saml-user-attribute-mapper",
-                        "oidc-full-name-mapper",
-                        "oidc-usermodel-attribute-mapper",
                         "oidc-usermodel-property-mapper",
-                        "oidc-sha256-pairwise-sub-mapper"
+                        "oidc-sha256-pairwise-sub-mapper",
+                        "saml-user-attribute-mapper",
+                        "oidc-usermodel-attribute-mapper",
+                        "oidc-address-mapper",
+                        "oidc-full-name-mapper",
+                        "saml-role-list-mapper",
+                        "saml-user-property-mapper"
                     ]
                 }
             },
@@ -1915,13 +1921,13 @@
                 "config": {
                     "allowed-protocol-mapper-types": [
                         "oidc-usermodel-property-mapper",
-                        "saml-role-list-mapper",
-                        "saml-user-property-mapper",
-                        "oidc-address-mapper",
-                        "oidc-usermodel-attribute-mapper",
+                        "saml-user-attribute-mapper",
                         "oidc-sha256-pairwise-sub-mapper",
+                        "oidc-address-mapper",
                         "oidc-full-name-mapper",
-                        "saml-user-attribute-mapper"
+                        "saml-user-property-mapper",
+                        "saml-role-list-mapper",
+                        "oidc-usermodel-attribute-mapper"
                     ]
                 }
             },
