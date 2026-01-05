@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "composite": false,
+    "incremental": false,
+    "emitDeclarationOnly": false
+  },
+  "include": ["src/**/*"],
+  //Esto sirve para que el build de hegel incluya este paquete
+  //"references": [{ "path": "../ui", "path": "../translations" }]
+}

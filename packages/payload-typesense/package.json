@@ -1,0 +1,120 @@
+{
+  "name": "@nexo-labs/payload-typesense",
+  "version": "1.6.1",
+  "description": "A powerful, production-ready search plugin that integrates Typesense with Payload CMS, providing lightning-fast, typo-tolerant search capabilities with real-time synchronization and a comprehensive theme system.",
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm copyfiles && tsdown",
+    "dev": "tsdown --watch",
+    "clean": "rimraf -g {dist,*.tsbuildinfo}",
+    "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/ || true",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix",
+    "prepublishOnly": "pnpm clean && pnpm build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.5.4",
+    "@types/react": "19.1.8",
+    "@types/react-dom": "19.1.6",
+    "bundle-analyzer": "^0.0.6",
+    "copyfiles": "2.4.1",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.23.0",
+    "graphql": "^16.8.1",
+    "jsdom": "^24.0.0",
+    "next": "15.4.10",
+    "payload": "3.69.0",
+    "postcss": "^8.5.6",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "rimraf": "3.0.2",
+    "semantic-release": "^22.0.12",
+    "tsdown": "^0.16.5",
+    "typescript": "5.7.3",
+    "vitepress": "^1.6.4",
+    "vitest": "^3.1.2"
+  },
+  "peerDependencies": {
+    "@payloadcms/richtext-lexical": "^3.69.0",
+    "next": "15.4.8",
+    "payload": "^3.69.0",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "pnpm": "^9 || ^10"
+  },
+  "keywords": [
+    "payload",
+    "payloadcms",
+    "typesense",
+    "search",
+    "plugin",
+    "cms",
+    "headless",
+    "typescript",
+    "react",
+    "nextjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base.git",
+    "directory": "packages/payload-typesense"
+  },
+  "homepage": "https://github.com/Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base/tree/main/packages/payload-typesense#readme",
+  "bugs": {
+    "url": "https://github.com/Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base/issues"
+  },
+  "author": {
+    "name": "Front Tribe",
+    "email": "hey@fronttribe.com",
+    "url": "https://fronttribe.com"
+  },
+  "publisher": "front_tribe",
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "unrs-resolver"
+    ]
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@nexo-labs/payload-indexer": "workspace:*",
+    "openai": "^4.104.0",
+    "typesense": "^2.1.0",
+    "zod": "^4.1.11"
+  },
+  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
+}

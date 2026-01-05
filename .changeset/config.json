@@ -1,0 +1,21 @@
+{
+    "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
+    "changelog": [
+        "@changesets/changelog-github",
+        {
+            "repo": "Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base"
+        }
+    ],
+    "commit": false,
+    "fixed": [],
+    "linked": [
+        [
+            "@nexo-labs/payload-typesense",
+            "@nexo-labs/payload-indexer"
+        ]
+    ],
+    "access": "public",
+    "baseBranch": "main",
+    "updateInternalDependencies": "minor",
+    "ignore": []
+}

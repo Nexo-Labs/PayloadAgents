@@ -1,0 +1,88 @@
+{
+  "name": "@nexo-labs/payload-indexer",
+  "version": "1.6.1",
+  "description": "Generic document indexing library for Payload CMS with support for multiple search backends, embedding providers, and chunking strategies.",
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "clean": "rimraf -g {dist,*.tsbuildinfo}",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix",
+    "prepublishOnly": "pnpm clean && pnpm build"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@langchain/textsplitters": "^1.0.0",
+    "openai": "^4.68.0"
+  },
+  "peerDependencies": {
+    "payload": "^3.61.0",
+    "@payloadcms/richtext-lexical": "^3.61.0"
+  },
+  "peerDependenciesMeta": {
+    "@payloadcms/richtext-lexical": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.4",
+    "rimraf": "3.0.2",
+    "tsdown": "^0.16.5",
+    "typescript": "5.7.3"
+  },
+  "engines": {
+    "pnpm": "^9 || ^10"
+  },
+  "keywords": [
+    "payload",
+    "payloadcms",
+    "indexer",
+    "search",
+    "embeddings",
+    "chunking",
+    "rag",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base.git",
+    "directory": "packages/payload-indexer"
+  },
+  "homepage": "https://github.com/Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base/tree/main/packages/payload-indexer#readme",
+  "bugs": {
+    "url": "https://github.com/Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base/issues"
+  },
+  "author": {
+    "name": "Front Tribe",
+    "email": "hey@fronttribe.com",
+    "url": "https://fronttribe.com"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  }
+}

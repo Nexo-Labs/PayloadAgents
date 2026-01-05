@@ -2,9 +2,20 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT", ".env*"],
-      "outputs": [".turbo/**", ".next/**", ".vercel/**", "build/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT",
+        ".env*"
+      ],
+      "outputs": [
+        ".turbo/**",
+        ".next/**",
+        ".vercel/**",
+        "build/**",
+        "dist/**"
+      ]
     },
     "lint": {},
     "devcontainer": {
@@ -16,7 +27,9 @@
       "persistent": true
     },
     "start": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     },
     "storybook": {
       "cache": false,
