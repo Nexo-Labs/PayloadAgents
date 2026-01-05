@@ -35,9 +35,6 @@ jobs:
       - name: Build packages only
         run: pnpm turbo run build --filter="./packages/*"
 
-      - name: Copy npmrc for pnpm OIDC support
-        run: cp .npmrc ~/.npmrc 2>/dev/null || echo "//registry.npmjs.org/:_authToken=" > ~/.npmrc
-
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
