@@ -17,9 +17,9 @@ import { applySyncHooks } from "./sync/hooks.js";
 /**
  * Result of plugin creation containing the plugin function and internal services
  */
-export interface IndexerPluginResult {
+export interface IndexerPluginResult<TConfig extends Config> {
   /** The Payload plugin function */
-  plugin: (config: Config) => Config;
+  plugin: (config: TConfig) => TConfig;
   /** The embedding service instance (if configured) */
   embeddingService?: EmbeddingService;
   /** The adapter instance */
@@ -71,9 +71,9 @@ export interface IndexerPluginResult {
  * });
  * ```
  */
-export function createIndexerPlugin<TFieldMapping extends FieldMapping>(
+export function createIndexerPlugin<TFieldMapping extends FieldMapping, TConfig extends Config>(
   config: IndexerPluginConfig<TFieldMapping>
-): IndexerPluginResult {
+): IndexerPluginResult<TConfig> {
   const { adapter, features, collections } = config;
   const logger = new Logger({ enabled: true, prefix: "[payload-indexer]" });
 
@@ -93,7 +93,7 @@ export function createIndexerPlugin<TFieldMapping extends FieldMapping>(
   }
 
   // 2. Create the plugin function
-  const plugin = (payloadConfig: Config): Config => {
+  const plugin = (payloadConfig: TConfig): TConfig => {
     // Apply sync hooks to collections
     if (payloadConfig.collections && features.sync?.enabled) {
       payloadConfig.collections = applySyncHooks(
