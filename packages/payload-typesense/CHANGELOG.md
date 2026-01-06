@@ -1,5 +1,13 @@
 # @nexo-labs/payload-typesense
 
+## 1.6.5
+
+### Patch Changes
+
+- ad762ff: feat: generic typing in the config type
+- Updated dependencies [ad762ff]
+  - @nexo-labs/payload-indexer@1.6.5
+
 ## 1.6.4
 
 ### Patch Changes

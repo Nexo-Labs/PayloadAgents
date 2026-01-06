@@ -1,5 +1,13 @@
 # multi-tenant
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [ad762ff]
+  - @nexo-labs/payload-indexer@1.6.5
+  - @nexo-labs/payload-typesense@1.6.5
+
 ## 1.0.2
 
 ### Patch Changes
