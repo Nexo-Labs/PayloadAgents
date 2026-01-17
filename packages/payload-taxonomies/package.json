@@ -1,6 +1,6 @@
 {
   "name": "@nexo-labs/payload-taxonomies",
-  "version": "1.6.1",
+  "version": "2.0.0",
   "description": "Taxonomies for Payload CMS",
   "keywords": [
     "payload-cms",

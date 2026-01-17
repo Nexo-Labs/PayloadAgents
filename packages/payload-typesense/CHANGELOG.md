@@ -1,5 +1,16 @@
 # @nexo-labs/payload-typesense
 
+## 2.0.0
+
+### Minor Changes
+
+- d647d7d: Unified in the repository all the common packages
+
+### Patch Changes
+
+- Updated dependencies [d647d7d]
+  - @nexo-labs/payload-indexer@2.0.0
+
 ## 1.6.7
 
 ### Patch Changes

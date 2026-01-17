@@ -1,5 +1,11 @@
 # @nexo-labs/payload-indexer
 
+## 2.0.0
+
+### Minor Changes
+
+- d647d7d: Unified in the repository all the common packages
+
 ## 1.6.7
 
 ### Patch Changes
