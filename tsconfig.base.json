@@ -30,10 +30,10 @@
       }
     ],
     "paths": {
-        "@nexo-labs/hegel": ["./packages/hegel/src"],
         "@nexo-labs/payload-lexical-blocks-builder": ["./packages/payload-lexical-blocks-builder/src"],
         "@nexo-labs/payload-stripe-inventory": ["./packages/payload-stripe-inventory/src"],
         "@nexo-labs/payload-taxonomies": ["./packages/payload-taxonomies/src"],
+        "@nexo-labs/payload-indexer": ["./packages/payload-indexer/src"],
         "@nexo-labs/payload-typesense": ["./packages/payload-typesense/src"]
     }
   },

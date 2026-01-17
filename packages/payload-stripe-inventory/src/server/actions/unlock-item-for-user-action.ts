@@ -1,4 +1,3 @@
-import { Result } from "@nexo-labs/hegel";
 import { Payload } from "payload";
 import {
   checkIfUserCanUnlockQuery,
@@ -10,6 +9,15 @@ import { generateUserInventory } from "../../model/builders.js";
 import { getPermissionsSlugs } from "../../model/permissions.js";
 import type { UnlockItem, UserInventory } from "../../types/index.js";
 import { getCurrentUserQuery } from "../access/get-current-user-query.js";
+
+export type Result<T, E = string> = {
+    data: T;
+    error?: never;
+} | {
+    data?: never;
+    error: E;
+}
+
 
 const addUniqueUnlock = (
   unlocks: UnlockItem[],
