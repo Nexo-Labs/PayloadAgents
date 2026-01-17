@@ -1,14 +1,10 @@
 {
-  "name": "@nexo-labs/payload-stripe-inventory",
+  "name": "@nexo-labs/payload-taxonomies",
   "version": "1.6.1",
-  "description": "Sistema de inventario y suscripciones con Stripe para Payload CMS",
+  "description": "Taxonomies for Payload CMS",
   "keywords": [
     "payload-cms",
-    "stripe",
-    "payments",
-    "subscriptions",
-    "inventory",
-    "e-commerce"
+    "taxonomies"
   ],
   "license": "MIT",
   "author": "",
@@ -19,11 +15,6 @@
       "types": "./src/index.ts",
       "import": "./src/index.ts",
       "default": "./src/index.ts"
-    },
-    "./server": {
-      "import": "./src/server/index.ts",
-      "types": "./src/server/index.ts",
-      "default": "./src/server/index.ts"
     }
   },
   "main": "./src/index.ts",
@@ -36,23 +27,24 @@
     "build": "pnpm copyfiles && tsdown",
     "dev": "tsdown --watch",
     "clean": "rimraf -g {dist,*.tsbuildinfo}",
-    "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/ || true",
-    "prepare": "pnpm run clean && pnpm run build"
+    "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json,mjs}\" dist/ || true",
+    "prepare": "pnpm run clean && pnpm run build",
+    "taxonomize": "node src/processor/runners/run-taxonomizer.mjs",
+    "process": "node src/processor/runners/run-processor.mjs",
+    "diagram": "node src/processor/runners/run-diagram-generator.mjs",
+    "all": "pnpm run taxonomize && pnpm run process && pnpm run diagram"
   },
   "peerDependencies": {
-    "@nexo-labs/payload-taxonomies": "workspace:*",
-    "@payloadcms/plugin-stripe": "^3.70.0",
-    "next": "15.4.8",
+    "@payloadcms/ui": "^3.70.0",
+    "@types/json-schema": "^7.0.11",
     "payload": "^3.70.0",
-    "react": "^19.0.0",
-    "stripe": "17.2.1"
+    "react": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "@types/react": "npm:types-react@19.0.0-rc.1",
     "copyfiles": "^2.4.1",
-    "next": "15.4.10",
-    "rimraf": "^5.0.5",
+    "payload": "^3.70.0",
+    "rimraf": "^5.0.10",
     "tsdown": "^0.16.5",
     "typescript": "^5.0.0"
   },
@@ -62,16 +54,15 @@
         "import": "./dist/index.js",
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "./server": {
-        "import": "./dist/server/index.js",
-        "types": "./dist/server/index.d.ts",
-        "default": "./dist/server/index.js"
       }
     },
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "registry": "https://registry.npmjs.org/",
     "access": "public"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "16.4.7"
   }
 }

@@ -6,7 +6,10 @@
     "linked": [
         [
             "@nexo-labs/payload-typesense",
-            "@nexo-labs/payload-indexer"
+            "@nexo-labs/payload-indexer",
+            "@nexo-labs/payload-stripe-inventory",
+            "@nexo-labs/payload-taxonomies",
+            "@nexo-labs/payload-lexical-blocks-builder"
         ]
     ],
     "access": "public",
