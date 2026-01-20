@@ -175,6 +175,13 @@ export class DocumentSyncer {
         const embedding = await this.embeddingService.getEmbedding(sourceText);
         if (embedding) {
           (indexDoc as Record<string, unknown>).embedding = embedding;
+        } else {
+          logger.warn('Embedding generation failed for document', {
+            documentId: doc.id,
+            collection: this.collectionSlug,
+            textLength: sourceText.length,
+            textPreview: sourceText.substring(0, 200) + (sourceText.length > 200 ? '...' : ''),
+          });
         }
       }
     }
@@ -233,7 +240,17 @@ export class DocumentSyncer {
       let embedding: number[] = [];
       if (this.embeddingService) {
         const result = await this.embeddingService.getEmbedding(formattedText);
-        if (result) embedding = result;
+        if (result) {
+          embedding = result;
+        } else {
+          logger.warn('Embedding generation failed for chunk', {
+            documentId: doc.id,
+            collection: this.collectionSlug,
+            chunkIndex: chunk.index,
+            textLength: formattedText.length,
+            textPreview: formattedText.substring(0, 200) + (formattedText.length > 200 ? '...' : ''),
+          });
+        }
       }
 
       const chunkDoc = {

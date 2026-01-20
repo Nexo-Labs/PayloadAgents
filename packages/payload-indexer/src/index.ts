@@ -116,7 +116,8 @@ export type { ChunkHeaderMetadata, ParsedChunk } from "./core/utils/chunk-format
 
 export { buildHeaderHierarchy } from "./core/utils/header-utils.js";
 
-export { transformLexicalToMarkdown } from "./core/utils/transforms.js";
+export { transformLexicalToMarkdown, createSummarizeLexicalTransform, createSummarizeTransform, type SummarizeConfig } from "./core/utils/transforms.js";
+export type { SummarizeLexicalConfig } from "./core/utils/transforms.js";
 
 // ============================================================================
 // HOOKS EXPORTS

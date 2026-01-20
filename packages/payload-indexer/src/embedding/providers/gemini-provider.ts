@@ -42,7 +42,11 @@ export class GeminiEmbeddingProvider implements EmbeddingProvider {
         }
       };
     } catch (error) {
-      this.logger.error("Gemini embedding generation failed", error, { model: this.model });
+      this.logger.error("Gemini embedding generation failed", error, {
+        model: this.model,
+        textLength: text.length,
+        textPreview: text.substring(0, 200) + (text.length > 200 ? '...' : ''),
+      });
       return null;
     }
   }
