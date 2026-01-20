@@ -1,5 +1,11 @@
 # @nexo-labs/payload-lexical-blocks-builder
 
+## 1.6.17
+
+### Patch Changes
+
+- eb2409b: This is a test
+
 ## 1.6.16
 
 ### Patch Changes

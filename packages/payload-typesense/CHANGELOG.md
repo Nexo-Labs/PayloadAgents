@@ -1,5 +1,13 @@
 # @nexo-labs/payload-typesense
 
+## 1.6.17
+
+### Patch Changes
+
+- eb2409b: This is a test
+- Updated dependencies [eb2409b]
+  - @nexo-labs/payload-indexer@1.6.17
+
 ## 1.6.16
 
 ### Patch Changes
