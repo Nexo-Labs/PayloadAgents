@@ -1,5 +1,11 @@
 # @nexo-labs/payload-stripe-inventory
 
+## 1.6.19
+
+### Patch Changes
+
+- 9ec10fa: Fix tailwind in th chat-agent
+
 ## 1.6.18
 
 ### Patch Changes

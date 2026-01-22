@@ -1,5 +1,14 @@
 # @nexo-labs/chat-agent
 
+## 1.6.19
+
+### Patch Changes
+
+- 9ec10fa: Fix tailwind in th chat-agent
+- Updated dependencies [9ec10fa]
+  - @nexo-labs/payload-stripe-inventory@1.6.19
+  - @nexo-labs/payload-typesense@1.6.19
+
 ## 1.6.18
 
 ### Patch Changes
