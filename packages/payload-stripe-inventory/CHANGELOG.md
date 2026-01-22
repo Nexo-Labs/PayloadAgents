@@ -1,5 +1,11 @@
 # @nexo-labs/payload-stripe-inventory
 
+## 1.6.20
+
+### Patch Changes
+
+- 07a8604: Fixed problems with tailwind finally
+
 ## 1.6.19
 
 ### Patch Changes
