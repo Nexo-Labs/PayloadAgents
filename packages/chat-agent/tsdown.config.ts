@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({
-  entry: ['src/react.ts', 'src/server.ts'],
+  entry: ['src/react.ts'],
   format: ['esm'],
   dts: {
     resolve: true,
@@ -12,10 +12,6 @@ export default defineConfig({
   outDir: 'dist',
   tsconfig: './tsconfig.json',
   external: [
-    'payload',
-    '@payloadcms/richtext-lexical',
-    '@nexo-labs/payload-stripe-inventory',
-    '@nexo-labs/payload-typesense',
     'react',
     'react-dom',
     'framer-motion',

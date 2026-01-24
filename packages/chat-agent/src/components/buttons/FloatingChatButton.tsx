@@ -1,37 +1,98 @@
-"use client";
+'use client'
 
-import { ComponentProps } from "react";
+import { MessageCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '../../lib/utils.js'
 
 interface FloatingChatButtonProps {
-  onOpen: () => void;
-  aiIcon: string;
+  onOpen: () => void
+  aiIcon?: string
+  isOpen?: boolean
+  className?: string
+  ImageComponent?: any
 }
 
-const FloatingChatButton = ({ onOpen, aiIcon }: FloatingChatButtonProps) => {
+export const FloatingChatButton = ({
+  onOpen,
+  aiIcon,
+  isOpen = false,
+  className,
+  ImageComponent = (props: any) => <img {...props} />,
+}: FloatingChatButtonProps) => {
   return (
-    <div className="fixed bottom-6 left-6 z-40">
-      <button
-        onClick={onOpen}
-        className="relative w-16 h-16 rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-600 transition-all duration-300 transform hover:scale-105"
-        aria-label="Abrir chat"
-        style={{
-          background:
-            "linear-gradient(135deg, #4B5563 0%, #6B7280 25%, #9CA3AF 50%, #6B7280 75%, #4B5563 100%)",
-        }}
-      >
-        <div className="w-full h-full rounded-full overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={aiIcon}
-            alt="AI Chat Icon"
-            className="w-full h-full object-cover"
-            width={56}
-            height={56}
-          />
-        </div>
-      </button>
-    </div>
-  );
-};
+    <AnimatePresence>
+      {!isOpen && (
+        <motion.button
+          onClick={onOpen}
+          className={cn(
+            "fixed bottom-6 left-6 z-50 h-[60px] w-[60px] rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 overflow-hidden animate-pulse-glow",
+            !aiIcon && "bg-primary text-primary-foreground flex items-center justify-center",
+            className
+          )}
+          initial={{ scale: 0, rotate: -180, opacity: 0 }}
+          animate={{
+            scale: 1,
+            rotate: 0,
+            opacity: 1,
+          }}
+          exit={{
+            scale: 0,
+            rotate: 180,
+            opacity: 0,
+            transition: { duration: 0.3, ease: "easeInOut" }
+          }}
+          transition={{
+            type: "spring" as const,
+            stiffness: 260,
+            damping: 20,
+          }}
+          whileHover={{
+            scale: 1.08,
+            boxShadow: "var(--shadow-glow-lg)"
+          }}
+          whileTap={{ scale: 0.95 }}
+          aria-label="Abrir chat"
+        >
+          {aiIcon ? (
+            <motion.div
+              className="h-full w-full rounded-full p-[3px] bg-gradient-to-br from-primary via-primary/80 to-primary/60"
+              animate={{
+                opacity: [0.85, 1, 0.85]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <div className="h-full w-full rounded-full overflow-hidden bg-background">
+                <ImageComponent
+                  src={aiIcon}
+                  alt="Chat Avatar"
+                  className="h-full w-full object-cover"
+                  width={60}
+                  height={60}
+                />
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <MessageCircle className="w-8 h-8" />
+            </motion.div>
+          )}
+        </motion.button>
+      )}
+    </AnimatePresence>
+  )
+}
 
-export default FloatingChatButton;
+export default FloatingChatButton

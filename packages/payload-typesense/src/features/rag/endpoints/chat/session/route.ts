@@ -1,7 +1,7 @@
 import { CollectionSlug, Payload, PayloadRequest } from 'payload';
 import { jsonResponse } from '../validators/index.js'
 import { logger } from '../../../../../core/logging/logger.js'
-import { SessionConfig, getActiveSession, getSessionByConversationId, closeSession } from '../../../handlers/session-handlers.js';
+import { SessionConfig, getActiveSession, getSessionByConversationId, closeSession, renameSession } from '../../../handlers/session-handlers.js';
 
 /**
  * Configuration for session endpoints
@@ -117,31 +117,50 @@ export function createSessionDELETEHandler<TSlug extends CollectionSlug>(config:
       // Get Payload instance
       const payload = await config.getPayload()
 
-      logger.info('Closing chat session', { conversationId, userId })
+      logger.info('Deleting chat session', { conversationId, userId })
 
-      const session = await closeSession(payload, userId, conversationId, config.sessionConfig)
+      const collectionName = config.sessionConfig?.collectionName
+      if (!collectionName) {
+        throw new Error('Collection name is required to delete a session')
+      }
 
-      if (!session) {
+      const result = await payload.delete({
+        collection: collectionName,
+        where: {
+          and: [
+            {
+              conversation_id: {
+                equals: conversationId,
+              },
+            },
+            {
+              user: {
+                equals: userId,
+              },
+            },
+          ],
+        },
+      })
+
+      if (!result.docs || result.docs.length === 0) {
         return jsonResponse(
           { error: 'Sesión de chat no encontrada o no tienes permisos.' },
           { status: 404 },
         )
       }
+      
+      const session = result.docs[0] as any
 
-      logger.info('Chat session closed successfully', {
+      logger.info('Chat session deleted successfully', {
         conversationId,
-        totalTokens: session.total_tokens,
-        totalCost: session.total_cost,
       })
 
       return jsonResponse({
         success: true,
-        message: 'Sesión cerrada correctamente',
+        message: 'Sesión eliminada correctamente',
         session: {
           conversation_id: conversationId,
-          status: 'closed',
-          total_tokens: session.total_tokens,
-          total_cost: session.total_cost,
+          status: 'deleted',
         },
       })
     } catch (error) {
@@ -162,6 +181,81 @@ export function createSessionDELETEHandler<TSlug extends CollectionSlug>(config:
 }
 
 /**
+ * Create a parameterizable PATCH handler for session endpoint
+ *
+ * PATCH /api/chat/session?conversationId=xxx
+ * Body: { title: "New Title" }
+ * Rename a chat session
+ */
+export function createSessionPATCHHandler<TSlug extends CollectionSlug>(config: SessionEndpointConfig<TSlug>) {
+  return async function PATCH(request: PayloadRequest) {
+    try {
+      if (!await config.checkPermissions(request)) {
+        return jsonResponse({ error: 'No tienes permisos para acceder a esta sesión.' }, { status: 403 })
+      }
+      const userId = request.user?.id
+      if (!request.url || !userId) {
+        return jsonResponse({ error: 'URL not found' }, { status: 400 })
+      }
+
+      const { searchParams } = new URL(request.url)
+      const conversationId = searchParams.get('conversationId')
+
+      if (!conversationId) {
+        return jsonResponse(
+          { error: 'Se requiere un conversationId válido.' },
+          { status: 400 },
+        )
+      }
+
+      const body = await request.json?.()
+      const { title } = body
+
+      if (!title || typeof title !== 'string') {
+        return jsonResponse(
+          { error: 'Se requiere un título válido.' },
+          { status: 400 },
+        )
+      }
+
+      // Get Payload instance
+      const payload = await config.getPayload()
+
+      // Import explicitly to avoid circular dependencies if possible, or use from imported module
+
+      const session = await renameSession(payload, userId, conversationId, title, config.sessionConfig)
+
+      if (!session) {
+        return jsonResponse(
+          { error: 'Sesión de chat no encontrada o no tienes permisos.' },
+          { status: 404 },
+        )
+      }
+
+      return jsonResponse({
+        success: true,
+        message: 'Sesión renombrada correctamente',
+        session,
+      })
+    } catch (error) {
+      logger.error('Error renaming chat session', error as Error, {
+        conversationId: request.url ? new URL(request.url).searchParams.get('conversationId') : undefined,
+        userId: request.user?.id,
+      })
+
+      return jsonResponse(
+        {
+          error: 'Error al renombrar la sesión.',
+          details: error instanceof Error ? error.message : 'Error desconocido',
+        },
+        { status: 500 },
+      )
+    }
+  }
+}
+
+
+/**
  * Default exports for Next.js App Router
  */
-export { createSessionGETHandler as GET, createSessionDELETEHandler as DELETE }
+export { createSessionGETHandler as GET, createSessionDELETEHandler as DELETE, createSessionPATCHHandler as PATCH }

@@ -11,6 +11,7 @@ export interface LinkComponentProps {
   className?: string
   target?: string
   'aria-label'?: string
+  title?: string
 }
 
 /**
@@ -40,8 +41,8 @@ export type ImageComponent = React.ComponentType<ImageComponentProps>
 /**
  * Default Link component fallback (regular <a> tag)
  */
-export const DefaultLink: LinkComponent = ({ href, children, onClick, className, target, 'aria-label': ariaLabel }) => (
-  <a href={href} onClick={onClick} className={className} target={target} aria-label={ariaLabel}>
+export const DefaultLink: LinkComponent = ({ href, children, onClick, className, target, 'aria-label': ariaLabel, title }) => (
+  <a href={href} onClick={onClick} className={className} target={target} aria-label={ariaLabel} title={title}>
     {children}
   </a>
 )

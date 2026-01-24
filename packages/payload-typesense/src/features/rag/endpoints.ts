@@ -9,7 +9,8 @@ import type { CollectionSlug, PayloadHandler } from "payload";
 import type { TypesenseRAGPluginConfig } from "../../plugin/rag-types.js";
 import { createChatPOSTHandler } from "./endpoints/chat/route.js";
 import { defaultHandleNonStreamingResponse, defaultHandleStreamingResponse } from "./stream-handlers/index.js";
-import { createSessionDELETEHandler, createSessionGETHandler } from "./endpoints/chat/session/route.js";
+import { createSessionDELETEHandler, createSessionGETHandler, createSessionPATCHHandler } from "./endpoints/chat/session/route.js";
+import { createSessionsListGETHandler } from "./endpoints/chat/sessions/route.js";
 import { createChunksGETHandler } from "./endpoints/chunks/[id]/route.js";
 import { createAgentsGETHandler } from "./endpoints/chat/agents/route.js";
 
@@ -71,6 +72,7 @@ export function createRAGPayloadHandlers<TSlug extends CollectionSlug>(
     handler: createSessionGETHandler({
       getPayload: callbacks.getPayload,
       checkPermissions: callbacks.checkPermissions,
+      sessionConfig: { collectionName: config.collectionName },
     }),
   });
 
@@ -80,6 +82,27 @@ export function createRAGPayloadHandlers<TSlug extends CollectionSlug>(
     handler: createSessionDELETEHandler({
       getPayload: callbacks.getPayload,
       checkPermissions: callbacks.checkPermissions,
+      sessionConfig: { collectionName: config.collectionName },
+    }),
+  });
+
+  endpoints.push({
+    path: "/chat/session",
+    method: "patch" as const,
+    handler: createSessionPATCHHandler({
+      getPayload: callbacks.getPayload,
+      checkPermissions: callbacks.checkPermissions,
+      sessionConfig: { collectionName: config.collectionName },
+    }),
+  });
+
+  endpoints.push({
+    path: "/chat/sessions",
+    method: "get" as const,
+    handler: createSessionsListGETHandler({
+      getPayload: callbacks.getPayload,
+      checkPermissions: callbacks.checkPermissions,
+      sessionConfig: { collectionName: config.collectionName },
     }),
   });
 

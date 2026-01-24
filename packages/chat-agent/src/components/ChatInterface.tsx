@@ -1,14 +1,11 @@
 'use client'
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { useChatMessages } from '../hooks/useChatMessages.js'
-import { useChatSession } from '../hooks/useChatSession.js'
-import { ChatInput } from './ChatInput.js'
-import { ChatMessages } from './ChatMessages.js'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+import { useAssistantRuntime } from '../hooks/useAssistantRuntime.js'
 import DocumentSelector from './DocumentSelector.js'
-import { UsageDisplay } from './UsageDisplay.js'
 import { useChat } from './chat-context.js'
 import { LinkComponent } from '../types/components.js'
+import { Thread } from './assistant-ui/thread.js'
 
 interface Document {
   id: string
@@ -28,27 +25,24 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ generateHref, LinkComponent }, ref) => {
-  const { isMaximized, setMaximized, updateTokenUsage, selectedAgent } = useChat()
-  const [selectedDocuments, setSelectedDocuments] = useState<Document[]>([])
-  const [isDesktop, setIsDesktop] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  // Handler to minimize the chat
-  const handleMinimize = () => {
-    setMaximized(false)
-  }
-
-  // Use custom hooks for session and message management
   const {
+    isMaximized,
+    setMaximized,
+    updateTokenUsage,
+    selectedAgent,
+    // Session props from context
     conversationId,
     setConversationId,
     messages,
     setMessages,
     isLoadingSession,
     handleNewConversation,
-  } = useChatSession()
+  } = useChat()
+  const [selectedDocuments, setSelectedDocuments] = useState<Document[]>([])
+  const [isDesktop, setIsDesktop] = useState(false)
 
-  const { isLoading, error, usageInfo, handleSubmit } = useChatMessages({
+  // Create assistant-ui runtime
+  const runtime = useAssistantRuntime({
     messages,
     setMessages,
     conversationId,
@@ -56,19 +50,6 @@ const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ genera
     selectedDocuments,
     selectedAgent,
   })
-
-  // Sync usageInfo from streaming response with context
-  useEffect(() => {
-    if (usageInfo) {
-      updateTokenUsage({
-        limit: usageInfo.daily_limit,
-        used: usageInfo.daily_used,
-        remaining: usageInfo.daily_remaining,
-        percentage: (usageInfo.daily_used / usageInfo.daily_limit) * 100,
-        reset_at: usageInfo.reset_at,
-      })
-    }
-  }, [usageInfo, updateTokenUsage])
 
   // Detect if device is desktop (window width >= 1024px)
   useEffect(() => {
@@ -85,15 +66,6 @@ const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ genera
   // Determine if we should use side panel layout
   const shouldUseSidePanel = isMaximized && isDesktop
 
-  // Auto-scroll to bottom when new messages arrive
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
   // Expose handleNewConversation to parent via ref
   useImperativeHandle(ref, () => ({
     handleNewConversation,
@@ -105,11 +77,11 @@ const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ genera
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="flex space-x-2 justify-center mb-4">
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce delay-100"></div>
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce delay-200"></div>
+            <div className="w-3 h-3 rounded-full bg-primary animate-bounce" />
+            <div className="w-3 h-3 rounded-full bg-primary animate-bounce delay-75" />
+            <div className="w-3 h-3 rounded-full bg-primary animate-bounce delay-150" />
           </div>
-          <p className="text-gray-600">Cargando conversación...</p>
+          <p className="text-muted-foreground">Cargando conversación...</p>
         </div>
       </div>
     )
@@ -130,28 +102,13 @@ const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ genera
 
         {/* Chat Area (3/4 width) */}
         <div className="flex-1 flex flex-col">
-
-          {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <ChatMessages
-              messages={messages}
-              isLoading={isLoading}
-              error={error}
-              isMaximized={isMaximized}
-              onMinimize={handleMinimize}
-              generateHref={generateHref}
-              LinkComponent={LinkComponent}
-            />
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Usage info - only shows after first message */}
-          {usageInfo && <UsageDisplay usageInfo={usageInfo} />}
-
-          {/* Input area */}
-          <div className="border-t border-gray-300 p-4 bg-gray-50 rounded-br-xl">
-            <ChatInput onSubmit={handleSubmit} isLoading={isLoading} />
-          </div>
+          <Thread
+            runtime={runtime}
+            welcomeTitle="¡Bienvenido al Oráculo de Escohotado!"
+            welcomeSubtitle="Pregunta sobre filosofía, drogas, libertad, historia de las ideas y más."
+            generateHref={generateHref}
+            LinkComponent={LinkComponent}
+          />
         </div>
       </div>
     )
@@ -161,7 +118,7 @@ const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ genera
   return (
     <div className="flex flex-col h-full">
       {/* Document Selector */}
-      <div className="border-b border-gray-200 p-4 bg-white">
+      <div className="border-b border-border p-4 bg-background">
         <DocumentSelector
           onSelectionChange={setSelectedDocuments}
           isMaximized={isMaximized}
@@ -169,26 +126,15 @@ const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ genera
         />
       </div>
 
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <ChatMessages
-          messages={messages}
-          isLoading={isLoading}
-          error={error}
-          isMaximized={isMaximized}
-          onMinimize={handleMinimize}
+      {/* Chat Thread */}
+      <div className="flex-1 min-h-0">
+        <Thread
+          runtime={runtime}
+          welcomeTitle="¡Bienvenido al Oráculo de Escohotado!"
+          welcomeSubtitle="Pregunta sobre filosofía, drogas, libertad, historia de las ideas y más."
           generateHref={generateHref}
           LinkComponent={LinkComponent}
         />
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Usage info - only shows after first message */}
-      {usageInfo && <UsageDisplay usageInfo={usageInfo} showCost={false} />}
-
-      {/* Input area */}
-      <div className="border-t border-gray-300 p-4 bg-gray-50 rounded-b-xl">
-        <ChatInput onSubmit={handleSubmit} isLoading={isLoading} />
       </div>
     </div>
   )

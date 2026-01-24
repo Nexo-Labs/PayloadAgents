@@ -36,12 +36,7 @@
       "import": "./src/react.ts",
       "default": "./src/react.ts"
     },
-    "./server": {
-      "types": "./src/server.ts",
-      "import": "./src/server.ts",
-      "default": "./src/server.ts"
-    },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "./src/styles/input.css"
   },
   "main": "./src/react.ts",
   "types": "./src/react.ts",
@@ -59,14 +54,14 @@
     "prepublishOnly": "pnpm clean && pnpm build"
   },
   "peerDependencies": {
-    "@nexo-labs/payload-stripe-inventory": "workspace:*",
-    "@nexo-labs/payload-typesense": "workspace:*",
-    "payload": "3.72.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.0.0",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.24.7",
     "lodash": "^4.17.21",
     "react-markdown": "^10.1.0",

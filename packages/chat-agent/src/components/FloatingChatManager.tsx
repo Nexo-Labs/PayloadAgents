@@ -1,14 +1,21 @@
 'use client'
 
-import { BaseUser } from '@nexo-labs/payload-stripe-inventory'
 import FloatingChatPanel from './FloatingChatPanel.js'
 import FloatingChatButton from './buttons/FloatingChatButton.js'
 import { useChat } from './chat-context.js'
 import { ImageComponent, LinkComponent } from '../types/components.js'
 
+/**
+ * Minimal user type - consumer provides their own user type
+ */
+interface User {
+  id: string | number
+  [key: string]: unknown
+}
+
 interface FloatingChatManagerProps {
   aiIcon: string
-  useUser: () => { user: BaseUser | null }
+  useUser: () => { user: User | null }
   generateHref: (props: { type: string; value: { id: number; slug?: string | null } }) => string
   LinkComponent?: LinkComponent
   ImageComponent?: ImageComponent
@@ -28,7 +35,11 @@ const FloatingChatManager = ({
 
   return (
     <>
-      <FloatingChatButton onOpen={openPanel} aiIcon={aiIcon} />
+      <FloatingChatButton
+        onOpen={openPanel}
+        aiIcon={aiIcon}
+        ImageComponent={ImageComponent}
+      />
       {/* Siempre renderizar para que AnimatePresence funcione */}
       <FloatingChatPanel
         isOpen={isPanelOpen}

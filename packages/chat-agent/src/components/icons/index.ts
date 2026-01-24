@@ -1,7 +1,0 @@
-export { ArticleIcon } from './ArticleIcon.js'
-export { BookIcon } from './BookIcon.js'
-export { ChevronDownIcon } from './ChevronDownIcon.js'
-export { CloseXIcon } from './CloseXIcon.js'
-export { ExpandIcon } from './ExpandIcon.js'
-export { ListIcon } from './ListIcon.js'
-export { SearchIcon } from './SearchIcon.js'

@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react'
+import { useChatSession, Message, SessionSummary } from '../hooks/useChatSession.js'
 
 export interface TokenUsage {
   limit: number
@@ -28,11 +29,27 @@ interface ChatContextType {
   tokenUsage: TokenUsage | null
   isLoadingTokens: boolean
   updateTokenUsage: (newUsage: Partial<TokenUsage>) => void
+  // Limit error (when 429 is received)
+  limitError: string | null
+  setLimitError: (error: string | null) => void
   // Agent management
   agents: PublicAgentInfo[]
   selectedAgent: string | null
   setSelectedAgent: (slug: string) => void
   isLoadingAgents: boolean
+  // Session & History (from useChatSession)
+  conversationId: string | null
+  setConversationId: (id: string | null) => void
+  messages: Message[]
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+  isLoadingSession: boolean
+  handleNewConversation: () => Promise<void>
+  sessionsHistory: SessionSummary[]
+  isLoadingHistory: boolean
+  loadHistory: () => Promise<void>
+  loadSession: (conversationId: string) => Promise<void>
+  renameSession: (conversationId: string, newTitle: string) => Promise<boolean>
+  deleteSession: (conversationId: string) => Promise<boolean>
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -41,8 +58,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [isMaximized, setIsMaximized] = useState(false)
 
+  // Use session hook
+  const chatSession = useChatSession()
+
   // Token usage management - lazy loaded from SSE events
   const [tokenUsage, setTokenUsage] = useState<TokenUsage | null>(null)
+  const [limitError, setLimitError] = useState<string | null>(null)
   const isLoadingTokens = false // No initial fetch needed
 
   // Agent management
@@ -148,10 +169,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         tokenUsage,
         isLoadingTokens,
         updateTokenUsage,
+        limitError,
+        setLimitError,
         agents,
         selectedAgent,
         setSelectedAgent,
-        isLoadingAgents
+        isLoadingAgents,
+        ...chatSession // Spread useChatSession return values
       }}
     >
       {children}
