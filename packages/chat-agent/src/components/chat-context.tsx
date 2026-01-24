@@ -1,26 +1,17 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react'
-import { useChatSession, Message, SessionSummary } from '../hooks/useChatSession.js'
-
-export interface TokenUsage {
-  limit: number
-  used: number
-  remaining: number
-  percentage: number
-  reset_at: string
-}
-
-export interface PublicAgentInfo {
-  slug: string
-  name: string
-}
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react'
+import { useChatSession } from '../hooks/useChatSession.js'
+import type { Message, SessionSummary } from '../adapters/ChatAdapter.js'
+import { ChatAdapter, PublicAgentInfo, TokenUsage } from '../adapters/ChatAdapter.js'
+import { NexoPayloadChatAdapter } from '../adapters/NexoPayloadChatAdapter.js'
 
 interface AgentsResponse {
   agents: PublicAgentInfo[]
 }
 
 interface ChatContextType {
+  adapter: ChatAdapter
   isPanelOpen: boolean
   isMaximized: boolean
   openPanel: () => void
@@ -54,12 +45,15 @@ interface ChatContextType {
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
-export const ChatProvider = ({ children }: { children: ReactNode }) => {
+export const ChatProvider = ({ children, adapter: customAdapter }: { children: ReactNode; adapter?: ChatAdapter }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [isMaximized, setIsMaximized] = useState(false)
 
-  // Use session hook
-  const chatSession = useChatSession()
+  // Initialize adapter (memoize default to avoid re-creation)
+  const adapter = useMemo(() => customAdapter || new NexoPayloadChatAdapter(), [customAdapter])
+
+  // Use session hook with adapter
+  const chatSession = useChatSession(adapter)
 
   // Token usage management - lazy loaded from SSE events
   const [tokenUsage, setTokenUsage] = useState<TokenUsage | null>(null)
@@ -76,15 +70,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     const loadAgents = async () => {
       try {
         setIsLoadingAgents(true)
-        const response = await fetch('/api/chat/agents')
-        if (response.ok) {
-          const data = (await response.json()) as AgentsResponse
-          setAgents(data.agents || [])
-          if (data.agents?.length > 0 && !selectedAgent) {
-            setSelectedAgent(data.agents[0]?.slug || null)
-          }
-        } else {
-          console.error('[ChatContext] Failed to load agents:', response.statusText)
+        const loadedAgents = await adapter.getAgents()
+        setAgents(loadedAgents)
+        if (loadedAgents.length > 0 && !selectedAgent) {
+          setSelectedAgent(loadedAgents[0]?.slug || null)
         }
       } catch (error) {
         console.error('[ChatContext] Error loading agents:', error)
@@ -94,7 +83,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
 
     loadAgents()
-  }, [selectedAgent])
+  }, [adapter, selectedAgent]) // Re-run if adapter changes
 
   // Check if device is mobile or tablet (not desktop)
   const isMobileOrTablet = () => {
@@ -161,6 +150,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ChatContext.Provider
       value={{
+        adapter,
         isPanelOpen,
         isMaximized,
         openPanel,
@@ -190,3 +180,4 @@ export const useChat = () => {
   }
   return context
 }
+
