@@ -55,7 +55,8 @@ export const FloatingChatButton = ({
         >
           {aiIcon ? (
             <motion.div
-              className="h-full w-full rounded-full p-[3px] bg-gradient-to-br from-primary via-primary/80 to-primary/60"
+              className="h-full w-full rounded-full p-[3px]"
+              style={{ background: 'var(--chat-border-color)' }}
               animate={{
                 opacity: [0.85, 1, 0.85]
               }}

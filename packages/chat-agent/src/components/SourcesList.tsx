@@ -4,7 +4,7 @@ import { BookOpen, FileText, ChevronDown, X, List, Loader2 } from "lucide-react"
 import { useChunkLoader } from "../hooks/useChunkLoader.js";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useState } from "react";
-import ReactMarkdown from "react-markdown";
+import { MarkdownText } from "./assistant-ui/markdown-text.js";
 import { ViewMoreLink } from "./buttons/ViewMoreLink.js";
 import { LinkComponent } from "../types/components.js";
 import { cn } from "../lib/utils.js";
@@ -241,9 +241,7 @@ export const SourcesList: React.FC<SourcesListProps> = ({
                   </div>
                 ) : displayContent ? (
                   <>
-                    <div className="text-sm text-foreground leading-relaxed prose prose-sm prose-gray dark:prose-invert max-w-none">
-                      <ReactMarkdown>{cleanContent}</ReactMarkdown>
-                    </div>
+                    <MarkdownText text={cleanContent} />
 
                     {/* Metadata Pills - Breadcrumb hierarchy */}
                     {metadata && (metadata.path || metadata.section) && (
@@ -400,8 +398,8 @@ export const SourcesList: React.FC<SourcesListProps> = ({
                     </div>
 
                     {source.excerpt && (
-                      <div className="text-muted-foreground mt-1 text-xs line-clamp-2 italic prose prose-xs prose-gray dark:prose-invert max-w-none">
-                        <ReactMarkdown>{`"${source.excerpt}"`}</ReactMarkdown>
+                      <div className="text-muted-foreground mt-1 text-xs line-clamp-2 italic">
+                        <MarkdownText text={`"${source.excerpt}"`} />
                       </div>
                     )}
                   </div>

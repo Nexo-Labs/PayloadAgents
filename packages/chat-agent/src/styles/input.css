@@ -25,6 +25,7 @@
   --chat-accent-s: 96%;
   --chat-accent-l: 16%;
   --chat-accent: var(--chat-accent-h) var(--chat-accent-s) var(--chat-accent-l);
+  --chat-border-color: hsl(var(--chat-accent));
 
   /* Glow shadows using the accent color */
   --shadow-glow-primary: 0 0 20px hsl(var(--chat-accent) / 0.15);
@@ -163,6 +164,10 @@
 
 .bg-chat-status-online {
   background-color: hsl(var(--chat-status-online));
+}
+
+.border-chat-border {
+  border-color: var(--chat-border-color);
 }
 
 /* Force markdown rendering to inherit color */
