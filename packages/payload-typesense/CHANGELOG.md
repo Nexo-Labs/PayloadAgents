@@ -1,5 +1,13 @@
 # @nexo-labs/payload-typesense
 
+## 1.7.1
+
+### Patch Changes
+
+- 40d664a: Fixed error with lucide react, package didn't load
+- Updated dependencies [40d664a]
+  - @nexo-labs/payload-indexer@1.7.1
+
 ## 1.7.0
 
 ### Minor Changes
