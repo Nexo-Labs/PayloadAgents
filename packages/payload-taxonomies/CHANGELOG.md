@@ -1,5 +1,11 @@
 # @nexo-labs/payload-taxonomies
 
+## 1.7.1
+
+### Patch Changes
+
+- 40d664a: Fixed error with lucide react, package didn't load
+
 ## 1.7.0
 
 ### Minor Changes
