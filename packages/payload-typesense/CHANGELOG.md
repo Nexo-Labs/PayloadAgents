@@ -1,5 +1,13 @@
 # @nexo-labs/payload-typesense
 
+## 1.7.4
+
+### Patch Changes
+
+- 9e77c00: fix: issues in chat-agent styling
+- Updated dependencies [9e77c00]
+  - @nexo-labs/payload-indexer@1.7.4
+
 ## 1.7.3
 
 ### Patch Changes

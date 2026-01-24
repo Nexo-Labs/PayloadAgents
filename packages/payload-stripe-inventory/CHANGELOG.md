@@ -1,5 +1,11 @@
 # @nexo-labs/payload-stripe-inventory
 
+## 1.7.4
+
+### Patch Changes
+
+- 9e77c00: fix: issues in chat-agent styling
+
 ## 1.7.3
 
 ### Patch Changes
