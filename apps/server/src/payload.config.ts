@@ -18,6 +18,7 @@ import type { Config } from './payload-types'
 import { getUserTenantIDs } from './utilities/getUserTenantIDs'
 import { seed } from './seed'
 import authJs from './modules/authjs'
+import { migrations } from './migrations'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -32,6 +33,8 @@ export default buildConfig({
   },
   collections: [Pages, Users, Tenants, ChatSessions, Agents, Media, taxonomiesCollection({})],
   db: postgresAdapter({
+    push: false,
+    prodMigrations: migrations,
     pool: {
       connectionString: process.env.DATABASE_URL,
     },

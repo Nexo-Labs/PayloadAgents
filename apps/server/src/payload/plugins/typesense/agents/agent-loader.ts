@@ -37,6 +37,7 @@ function toAgentConfig(agent: Agent): AgentConfig {
     llmModel: agent.llmModel,
     searchCollections: agent.searchCollections || ['pages_chunk'],
     kResults: agent.kResults ?? 5,
+    apiKey: agent.apiKey,
     maxContextBytes: agent.maxContextBytes ?? 65536,
     ttl: agent.ttl ?? 86400,
     avatar: extractAvatarUrl(agent.avatar),

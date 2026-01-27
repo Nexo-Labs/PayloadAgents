@@ -39,23 +39,41 @@ export async function defaultHandleStreamingResponse(
   let fullAssistantMessage = '';
 
   try {
+    let chunkCount = 0;
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
-        logger.debug('Streaming response completed');
+        logger.info('Streaming response completed', {
+          totalChunks: chunkCount,
+          finalMessageLength: fullAssistantMessage.length
+        });
         break;
       }
 
-      buffer += decoder.decode(value, { stream: true });
+      chunkCount++;
+      const chunkText = decoder.decode(value, { stream: true });
+      buffer += chunkText;
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';
 
+      logger.info('Received chunk from Typesense', {
+        chunkNumber: chunkCount,
+        chunkSize: chunkText.length,
+        linesInChunk: lines.length,
+        bufferSize: buffer.length,
+        firstLinePreview: lines[0]?.substring(0, 200)
+      });
+
       for (const line of lines) {
         const event = parseConversationEvent(line);
-        if (!event) continue;
+        if (!event) {
+          logger.info('Skipping line that could not be parsed', { line: line.substring(0, 100) });
+          continue;
+        }
 
         // Handle [DONE] event
         if (event.raw === '[DONE]') {
+          logger.info('[DONE] event received, sending done event to client');
           sendSSEEvent(controller, encoder, { type: 'done', data: '' });
           continue;
         }
@@ -63,7 +81,7 @@ export async function defaultHandleStreamingResponse(
         // Capture conversation_id
         if (!conversationId && event.conversationId) {
           conversationId = event.conversationId;
-          logger.debug('Conversation ID captured', { conversationId });
+          logger.info('Conversation ID captured', { conversationId });
           sendSSEEvent(controller, encoder, { type: 'conversation_id', data: conversationId });
         }
 
@@ -73,6 +91,7 @@ export async function defaultHandleStreamingResponse(
           contextText = buildContextText(event.results);
 
           if (sources.length > 0) {
+            logger.info('Sources extracted and sent', { sourceCount: sources.length });
             sendSSEEvent(controller, encoder, { type: 'sources', data: sources });
           }
 
@@ -82,6 +101,11 @@ export async function defaultHandleStreamingResponse(
         // Stream conversation tokens
         if (event.message) {
           fullAssistantMessage += event.message;
+          logger.info('Token received', {
+            tokenLength: event.message.length,
+            totalMessageLength: fullAssistantMessage.length,
+            token: event.message.substring(0, 50)
+          });
           sendSSEEvent(controller, encoder, { type: 'token', data: event.message });
         }
       }

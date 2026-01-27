@@ -112,6 +112,14 @@ export async function executeRAGSearch(
 
   if (!response.ok) {
     const errorText = await response.text()
+
+    // Detect expired conversation error
+    if (errorText.includes('conversation_id') && errorText.includes('invalid')) {
+      const error = new Error('EXPIRED_CONVERSATION')
+      ;(error as any).cause = errorText
+      throw error
+    }
+
     throw new Error(`Typesense search failed: ${errorText}`)
   }
 

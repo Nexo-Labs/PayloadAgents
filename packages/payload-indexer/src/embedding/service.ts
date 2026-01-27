@@ -1,6 +1,5 @@
 import type { EmbeddingService, EmbeddingProvider, EmbeddingProviderConfig } from "./types.js";
 import type { Logger } from "../core/logging/logger.js";
-import { DEFAULT_EMBEDDING_DIMENSIONS } from "../core/config/constants.js";
 import { OpenAIEmbeddingProvider } from "./providers/openai-provider.js";
 import { GeminiEmbeddingProvider } from "./providers/gemini-provider.js";
 
@@ -27,7 +26,7 @@ export class EmbeddingServiceImpl implements EmbeddingService {
   }
 
   getDimensions(): number {
-    return this.config.dimensions || DEFAULT_EMBEDDING_DIMENSIONS;
+    return this.config.dimensions!;
   }
 }
 

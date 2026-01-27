@@ -32,8 +32,6 @@ core/
 - `config-validation.ts` - Configuration validation utilities
 
 **Key Constants:**
-- `DEFAULT_EMBEDDING_MODEL` - Default embedding model
-- `DEFAULT_EMBEDDING_DIMENSIONS` - Default embedding dimensions
 - `DEFAULT_CHUNK_SIZE` - Default text chunk size
 - `DEFAULT_SEARCH_LIMIT` - Default search results limit
 
@@ -54,7 +52,6 @@ core/
 ```typescript
 // Import from core
 import { logger } from './core/logging/logger.js';
-import { DEFAULT_EMBEDDING_MODEL } from './core/config/constants.js';
 import { createTypesenseClient } from './core/client/typesense-client.js';
 import { InvalidConfigError } from './core/errors/index.js';
 

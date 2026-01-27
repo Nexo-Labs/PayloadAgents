@@ -68,7 +68,7 @@ export function useAssistantRuntime({
   selectedAgent,
 }: UseAssistantRuntimeProps) {
 
-  const { updateTokenUsage, setLimitError, adapter } = useChat()
+  const { updateTokenUsage, setLimitError, adapter, loadHistory } = useChat()
   const [isRunning, setIsRunning] = useState(false)
   const threadMessages = useMemo(() => toThreadMessages(messages), [messages])
 
@@ -176,6 +176,34 @@ export function useAssistantRuntime({
 
     } catch (err: any) {
       console.error('[useAssistantRuntime] Error:', err)
+
+      // Handle expired conversation error
+      if (err.code === 'EXPIRED_CONVERSATION') {
+        console.warn('[useAssistantRuntime] Conversation expired:', err.chatId)
+
+        // Replace placeholder with error message
+        setMessages(prev => {
+          const updated = [...prev]
+          const lastIdx = updated.length - 1
+          if (lastIdx >= 0 && updated[lastIdx]?.role === 'assistant') {
+            updated[lastIdx] = {
+              ...updated[lastIdx],
+              content: `⚠️ **Conversación Expirada**\n\n${err.message}\n\nLas conversaciones expiran después de 24 horas de inactividad por motivos de seguridad y privacidad.`,
+            }
+          }
+          return updated
+        })
+
+        // Clear conversation ID so user can start a new conversation
+        setConversationId(null)
+
+        // Reload history to remove expired conversation from sidebar
+        if (loadHistory) {
+          loadHistory().catch(console.error)
+        }
+
+        return
+      }
 
       // Handle 429 - Token limit exceeded (propagated from adapter)
       if (err.message === 'Has alcanzado tu límite diario de tokens.') {

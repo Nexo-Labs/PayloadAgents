@@ -55,6 +55,9 @@ export class AgentManager {
         max_bytes: agent.maxContextBytes || 65536,
         ttl: agent.ttl || 86400,
         k_results: agent.kResults || 5,
+        max_tokens: agent.maxTokens || 16000,
+        temperature: agent.temperature ?? 0.7,
+        top_p: agent.topP ?? 0.95,
       };
 
       // Direct API call logic

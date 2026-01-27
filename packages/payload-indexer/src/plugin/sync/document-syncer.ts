@@ -31,7 +31,6 @@ export const syncDocumentToIndex = async (
   tableConfig: TableConfig,
   embeddingService?: EmbeddingService
 ) => {
-  try {
     const tableName = getIndexCollectionName(collectionSlug, tableConfig);
 
     logger.debug('Syncing document to index', {
@@ -56,21 +55,6 @@ export const syncDocumentToIndex = async (
       tableName,
       operation,
     });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isValidationError = errorMessage.toLowerCase().includes('validation');
-
-    logger.error(
-      `Failed to sync document to index`,
-      error as Error,
-      {
-        documentId: doc.id,
-        collection: collectionSlug,
-        operation,
-        isValidationError,
-      }
-    );
-  }
 };
 
 /**

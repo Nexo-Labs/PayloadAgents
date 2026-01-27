@@ -207,3 +207,51 @@ async function createNewSession(
     totalCost,
   })
 }
+
+/**
+ * Mark chat session as expired/closed
+ * Called when Typesense returns "conversation_id is invalid"
+ *
+ * @param payload - Payload CMS instance
+ * @param conversationId - Conversation ID that expired in Typesense
+ * @param collectionName - Collection name for sessions
+ * @returns true if session was found and marked as expired, false otherwise
+ */
+export async function markChatSessionAsExpired(
+  payload: Payload,
+  conversationId: string,
+  collectionName: CollectionSlug,
+): Promise<boolean> {
+  try {
+    const existing = await payload.find({
+      collection: collectionName,
+      where: { conversation_id: { equals: conversationId } },
+      limit: 1,
+    })
+
+    if (existing.docs.length > 0 && existing.docs[0]) {
+      await payload.update({
+        collection: collectionName,
+        id: existing.docs[0].id,
+        data: {
+          status: 'closed',
+          closed_at: new Date().toISOString(),
+        } as any,
+      })
+
+      logger.info('Chat session marked as expired', {
+        conversationId,
+        sessionId: existing.docs[0].id,
+      })
+
+      return true
+    }
+
+    return false
+  } catch (error) {
+    logger.error('Error marking chat session as expired', error as Error, {
+      conversationId,
+    })
+    return false
+  }
+}

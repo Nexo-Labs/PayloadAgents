@@ -3,9 +3,14 @@ import { slugField } from 'payload'
 import { COLLECTION_SLUG_TAXONOMY } from '@nexo-labs/payload-taxonomies'
 import { importAgents } from './endpoints/importAgents'
 import { importAgentData } from './endpoints/importAgentData'
+import { afterChangeHook, afterDeleteHook } from './hooks'
 
 export const Agents: CollectionConfig = {
   slug: 'agents',
+  hooks: {
+    afterChange: [afterChangeHook],
+    afterDelete: [afterDeleteHook],
+  },
   admin: {
     useAsTitle: 'name',
     group: 'RAG',
@@ -62,9 +67,17 @@ export const Agents: CollectionConfig = {
               name: 'llmModel',
               type: 'text',
               required: true,
-              defaultValue: 'google/gemini-2.0-flash',
+              defaultValue: 'openai/gpt-4o-mini',
               admin: {
                 description: 'LLM model to use (e.g., google/gemini-2.0-flash, openai/gpt-4o-mini)',
+              },
+            },
+            {
+              name: 'apiKey',
+              type: 'text',
+              required: true,
+              admin: {
+                description: 'API Key for the LLM provider (optional)',
               },
             },
             {

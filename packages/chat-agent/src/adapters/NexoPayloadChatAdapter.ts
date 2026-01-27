@@ -112,11 +112,17 @@ export class NexoPayloadChatAdapter implements ChatAdapter {
                             break
 
                         case 'error':
+                            // Check if it's an expired conversation error
+                            if (event.data?.error === 'EXPIRED_CONVERSATION') {
+                                const error = new Error(event.data?.message || 'Esta conversación ha expirado')
+                                ;(error as any).code = 'EXPIRED_CONVERSATION'
+                                ;(error as any).chatId = event.data?.chatId
+                                throw error
+                            }
                             throw new Error(event.data?.error || 'Streaming error')
                     }
                 } catch (e) {
                     if (!(e instanceof SyntaxError)) throw e
-                    // If JSON parse fails, it might be a partial line, but here we are checking whole lines
                     console.warn('Failed to parse SSE event:', data)
                 }
             }
@@ -128,6 +134,11 @@ export class NexoPayloadChatAdapter implements ChatAdapter {
             const response = await fetch('/api/chat/session?active=true')
             if (response.ok) {
                 const sessionData = await response.json()
+                // Don't load if session is closed/expired
+                if (sessionData.status === 'closed') {
+                    console.warn('[NexoPayloadChatAdapter] Active session is closed/expired, clearing')
+                    return null
+                }
                 return {
                     conversationId: sessionData.conversation_id,
                     messages: this.parseBackendMessages(sessionData.messages)
@@ -145,7 +156,9 @@ export class NexoPayloadChatAdapter implements ChatAdapter {
             const response = await fetch('/api/chat/sessions')
             if (response.ok) {
                 const data = await response.json()
-                return data.sessions || []
+                const sessions = data.sessions || []
+                // Filter out closed/expired sessions
+                return sessions.filter((session: SessionSummary) => session.status === 'active')
             }
             return []
         } catch (error) {
@@ -159,6 +172,11 @@ export class NexoPayloadChatAdapter implements ChatAdapter {
             const response = await fetch(`/api/chat/session?conversationId=${encodeURIComponent(id)}`)
             if (response.ok) {
                 const sessionData = await response.json()
+                // Don't load if session is closed/expired
+                if (sessionData.status === 'closed') {
+                    console.warn('[NexoPayloadChatAdapter] Session is closed/expired:', id)
+                    return null
+                }
                 return {
                     conversationId: sessionData.conversation_id,
                     messages: this.parseBackendMessages(sessionData.messages)

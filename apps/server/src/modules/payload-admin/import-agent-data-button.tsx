@@ -68,17 +68,17 @@ export const ImportAgentDataButton: UIFieldClientComponent = () => {
       style={{
         padding: '16px',
         marginBottom: '20px',
-        backgroundColor: '#f8fafc',
+        backgroundColor: 'var(--theme-elevation-50)',
         borderRadius: '8px',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--theme-elevation-100)',
       }}
     >
       <div style={{ marginBottom: '12px' }}>
-        <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 600 }}>
+        <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 600, color: 'var(--theme-text)' }}>
           Importar datos del agente
         </h4>
-        <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
-          Busca el archivo <code style={{ backgroundColor: '#e2e8f0', padding: '2px 6px', borderRadius: '4px' }}>
+        <p style={{ margin: 0, fontSize: '12px', color: 'var(--theme-elevation-500)' }}>
+          Busca el archivo <code style={{ backgroundColor: 'var(--theme-elevation-100)', padding: '2px 6px', borderRadius: '4px' }}>
             data/{expectedFile}
           </code> e importa su contenido a Pages.
         </p>
@@ -138,7 +138,7 @@ export const ImportAgentDataButton: UIFieldClientComponent = () => {
         </Button>
 
         {!id && (
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+          <span style={{ fontSize: '12px', color: 'var(--theme-elevation-400)' }}>
             Guarda el agente primero para poder importar
           </span>
         )}

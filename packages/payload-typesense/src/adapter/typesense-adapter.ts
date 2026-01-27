@@ -44,9 +44,9 @@ import type {
  * ```
  */
 export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchema> {
-  readonly name = 'typesense';
+  readonly name = "typesense";
 
-  constructor(private client: Client) { }
+  constructor(private client: Client) {}
 
   /**
    * Test connection to Typesense
@@ -69,10 +69,16 @@ export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchem
 
     try {
       // Check if collection exists
-      const existing = await this.client.collections(schema.name).retrieve() as TypesenseCollectionInfo;
+      const existing = (await this.client
+        .collections(schema.name)
+        .retrieve()) as TypesenseCollectionInfo;
 
       // Collection exists, add new fields if any
-      await this.updateCollectionIfNeeded(schema.name, existing, typesenseSchema);
+      await this.updateCollectionIfNeeded(
+        schema.name,
+        existing,
+        typesenseSchema,
+      );
     } catch (error: unknown) {
       const typesenseError = error as { httpStatus?: number };
       if (typesenseError?.httpStatus === 404) {
@@ -119,11 +125,20 @@ export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchem
   /**
    * Upsert a single document
    */
-  async upsertDocument(collectionName: string, document: IndexDocument): Promise<void> {
+  async upsertDocument(
+    collectionName: string,
+    document: IndexDocument,
+  ): Promise<void> {
     try {
-      await this.client.collections(collectionName).documents().upsert(document);
+      await this.client
+        .collections(collectionName)
+        .documents()
+        .upsert(document);
     } catch (error) {
-      logger.error(`Failed to upsert document ${document.id} to ${collectionName}`, error);
+      logger.error(
+        `Failed to upsert document ${document.id} to ${collectionName}`,
+        error,
+      );
       throw error;
     }
   }
@@ -131,22 +146,22 @@ export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchem
   /**
    * Upsert multiple documents (batch)
    */
-  async upsertDocuments(collectionName: string, documents: IndexDocument[]): Promise<void> {
+  async upsertDocuments(
+    collectionName: string,
+    documents: IndexDocument[],
+  ): Promise<void> {
     if (documents.length === 0) return;
 
     try {
-      await this.client.collections(collectionName).documents().import(documents, {
-        action: 'upsert',
-      });
+      await this.client
+        .collections(collectionName)
+        .documents()
+        .import(documents, {
+          action: "upsert",
+        });
     } catch (error: any) {
-      if (error?.importResults) {
-        const failedItems = error.importResults.filter((r: any) => !r.success);
-        logger.error(
-          `Failed to batch upsert documents to ${collectionName}. Detailed errors:`,
-          JSON.stringify(failedItems, null, 2)
-        );
-      }
-      logger.error(`Failed to batch upsert ${documents.length} documents to ${collectionName}`, error);
+      const failedItems = error?.importResults?.filter((r: any) => !r.success);
+      logger.error(JSON.stringify(failedItems));
       throw error;
     }
   }
@@ -154,14 +169,23 @@ export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchem
   /**
    * Delete a document by ID
    */
-  async deleteDocument(collectionName: string, documentId: string): Promise<void> {
+  async deleteDocument(
+    collectionName: string,
+    documentId: string,
+  ): Promise<void> {
     try {
-      await this.client.collections(collectionName).documents(documentId).delete();
+      await this.client
+        .collections(collectionName)
+        .documents(documentId)
+        .delete();
     } catch (error: unknown) {
       const typesenseError = error as { httpStatus?: number };
       // Ignore 404 errors (document already deleted)
       if (typesenseError?.httpStatus !== 404) {
-        logger.error(`Failed to delete document ${documentId} from ${collectionName}`, error);
+        logger.error(
+          `Failed to delete document ${documentId} from ${collectionName}`,
+          error,
+        );
         throw error;
       }
     }
@@ -173,17 +197,24 @@ export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchem
    */
   async deleteDocumentsByFilter(
     collectionName: string,
-    filter: Record<string, unknown>
+    filter: Record<string, unknown>,
   ): Promise<number> {
     const filterStr = this.buildFilterString(filter);
 
     try {
-      const result = await this.client.collections(collectionName).documents().delete({
-        filter_by: filterStr,
-      });
+      const result = await this.client
+        .collections(collectionName)
+        .documents()
+        .delete({
+          filter_by: filterStr,
+        });
       return result.num_deleted || 0;
     } catch (error) {
-      logger.error(`Failed to delete documents by filter from ${collectionName}`, error, { filter });
+      logger.error(
+        `Failed to delete documents by filter from ${collectionName}`,
+        error,
+        { filter },
+      );
       throw error;
     }
   }
@@ -195,35 +226,35 @@ export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchem
   async vectorSearch<TDoc = Record<string, unknown>>(
     collectionName: string,
     vector: number[],
-    options: VectorSearchOptions = {}
+    options: VectorSearchOptions = {},
   ): Promise<AdapterSearchResult<TDoc>[]> {
     const { limit = 10, filter, includeFields, excludeFields } = options;
 
     try {
       const searchParams: Record<string, unknown> = {
-        q: '*',
-        vector_query: `embedding:([${vector.join(',')}], k:${limit})`,
+        q: "*",
+        vector_query: `embedding:([${vector.join(",")}], k:${limit})`,
       };
 
       if (filter) {
-        searchParams['filter_by'] = this.buildFilterString(filter);
+        searchParams["filter_by"] = this.buildFilterString(filter);
       }
 
       if (includeFields) {
-        searchParams['include_fields'] = includeFields.join(',');
+        searchParams["include_fields"] = includeFields.join(",");
       }
 
       if (excludeFields) {
-        searchParams['exclude_fields'] = excludeFields.join(',');
+        searchParams["exclude_fields"] = excludeFields.join(",");
       }
 
-      const result = await this.client
+      const result = (await this.client
         .collections(collectionName)
         .documents()
-        .search(searchParams) as TypesenseSearchResult<TDoc>;
+        .search(searchParams)) as TypesenseSearchResult<TDoc>;
 
-      return (result.hits || []).map(hit => ({
-        id: String((hit.document as Record<string, unknown>)?.id || ''),
+      return (result.hits || []).map((hit) => ({
+        id: String((hit.document as Record<string, unknown>)?.id || ""),
         score: hit.vector_distance ?? 0,
         document: hit.document,
       }));
@@ -238,10 +269,12 @@ export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchem
   /**
    * Convert generic schema to Typesense-specific schema
    */
-  private convertToTypesenseSchema(schema: TypesenseCollectionSchema): CollectionCreateSchema {
+  private convertToTypesenseSchema(
+    schema: TypesenseCollectionSchema,
+  ): CollectionCreateSchema {
     return {
       name: schema.name,
-      fields: schema.fields.map(field => this.convertField(field)),
+      fields: schema.fields.map((field) => this.convertField(field)),
       default_sorting_field: schema.defaultSortingField,
     };
   }
@@ -259,7 +292,7 @@ export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchem
     };
 
     // Add vector dimensions for float[] embedding fields
-    if (field.type === 'float[]' && field.vectorDimensions) {
+    if (field.type === "float[]" && field.vectorDimensions) {
       typesenseField.num_dim = field.vectorDimensions;
     }
 
@@ -272,23 +305,27 @@ export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchem
   private async updateCollectionIfNeeded(
     collectionName: string,
     currentSchema: TypesenseCollectionInfo,
-    targetSchema: CollectionCreateSchema
+    targetSchema: CollectionCreateSchema,
   ): Promise<void> {
     if (!currentSchema?.fields) return;
 
-    const currentFields = new Set(currentSchema.fields.map(f => f.name));
-    const newFields = targetSchema.fields?.filter(
-      f => !currentFields.has(f.name) && f.name !== 'id'
-    ) || [];
+    const currentFields = new Set(currentSchema.fields.map((f) => f.name));
+    const newFields =
+      targetSchema.fields?.filter(
+        (f) => !currentFields.has(f.name) && f.name !== "id",
+      ) || [];
 
     if (newFields.length > 0) {
-      logger.info(`Updating collection ${collectionName} with ${newFields.length} new fields`, {
-        fields: newFields.map(f => f.name)
-      });
+      logger.info(
+        `Updating collection ${collectionName} with ${newFields.length} new fields`,
+        {
+          fields: newFields.map((f) => f.name),
+        },
+      );
 
       try {
         await this.client.collections(collectionName).update({
-          fields: newFields
+          fields: newFields,
         });
       } catch (error) {
         logger.error(`Failed to update collection ${collectionName}`, error);
@@ -305,16 +342,16 @@ export class TypesenseAdapter implements IndexerAdapter<TypesenseCollectionSchem
     for (const [key, value] of Object.entries(filter)) {
       if (Array.isArray(value)) {
         // Array values use 'IN' syntax
-        parts.push(`${key}:[${value.map(v => String(v)).join(',')}]`);
-      } else if (typeof value === 'string') {
+        parts.push(`${key}:[${value.map((v) => String(v)).join(",")}]`);
+      } else if (typeof value === "string") {
         parts.push(`${key}:=${value}`);
-      } else if (typeof value === 'number') {
+      } else if (typeof value === "number") {
         parts.push(`${key}:${value}`);
-      } else if (typeof value === 'boolean') {
+      } else if (typeof value === "boolean") {
         parts.push(`${key}:${value}`);
       }
     }
 
-    return parts.join(' && ');
+    return parts.join(" && ");
   }
 }

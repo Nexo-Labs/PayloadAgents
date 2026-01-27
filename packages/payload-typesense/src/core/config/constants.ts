@@ -7,10 +7,6 @@
 // EMBEDDING CONSTANTS
 // ============================================================================
 
-/**
- * Default dimensions for OpenAI text-embedding-3-large model
- */
-export const DEFAULT_EMBEDDING_DIMENSIONS = 3072;
 
 // ============================================================================
 // SEARCH CONSTANTS

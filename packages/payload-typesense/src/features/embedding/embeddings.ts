@@ -7,9 +7,6 @@ import type {
 } from "../../shared/types/plugin-types.js";
 import {
   logger,
-  DEFAULT_EMBEDDING_DIMENSIONS,
-  DEFAULT_EMBEDDING_MODEL,
-  DEFAULT_GEMINI_EMBEDDING_MODEL,
   MIN_EMBEDDING_TEXT_LENGTH,
 } from "@nexo-labs/payload-indexer";
 
@@ -90,10 +87,14 @@ const generateOpenAIEmbedding = async (
     logger.debug('OpenAI API key not configured, skipping embedding generation');
     return null;
   }
+  if (!config) {
+    logger.debug('No embedding configuration provided, skipping embedding generation');
+    return null;
+  }
 
   try {
-    const model = config?.model || process.env.OPENAI_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL;
-    const dimensions = config?.dimensions || DEFAULT_EMBEDDING_DIMENSIONS;
+    const model = config.model;
+    const dimensions = config.dimensions;
 
     logger.debug('Generating OpenAI embedding', { model, dimensions, textLength: text.length });
 
@@ -142,10 +143,14 @@ const generateGeminiEmbedding = async (
     logger.debug('Google API key not configured, skipping embedding generation');
     return null;
   }
+  if (!config) {
+    logger.debug('No embedding configuration provided, skipping embedding generation');
+    return null;
+  }
 
   try {
-    const model = config?.model || DEFAULT_GEMINI_EMBEDDING_MODEL;
-    const dimensions = config?.dimensions || DEFAULT_EMBEDDING_DIMENSIONS;
+    const model = config.model;
+    const dimensions = config?.dimensions;
 
     logger.debug('Generating Gemini embedding', { model, dimensions, textLength: text.length });
 
@@ -221,10 +226,14 @@ const generateOpenAIEmbeddingWithUsage = async (
     logger.debug('OpenAI API key not configured, skipping embedding generation');
     return null;
   }
+  if (!config) {
+    logger.debug('No embedding configuration provided, skipping embedding generation');
+    return null;
+  }
 
   try {
-    const model = config?.model || process.env.OPENAI_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL;
-    const dimensions = config?.dimensions || DEFAULT_EMBEDDING_DIMENSIONS;
+    const model = config.model;
+    const dimensions = config.dimensions;
 
     logger.debug('Generating OpenAI embedding with usage tracking', { model, dimensions });
 
@@ -336,10 +345,14 @@ const generateOpenAIBatchEmbeddingsWithUsage = async (
     logger.debug('OpenAI API key not configured, skipping batch embedding generation');
     return null;
   }
+  if (!config) {
+    logger.debug('No embedding configuration provided, skipping batch embedding generation');
+    return null;
+  }
 
   try {
-    const model = config?.model || process.env.OPENAI_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL;
-    const dimensions = config?.dimensions || DEFAULT_EMBEDDING_DIMENSIONS;
+    const model = config.model;
+    const dimensions = config.dimensions;
 
     logger.debug('Generating OpenAI batch embeddings with usage tracking', {
       model,
@@ -403,10 +416,14 @@ const generateGeminiBatchEmbeddingsWithUsage = async (
     logger.debug('Google API key not configured, skipping batch embedding generation');
     return null;
   }
+  if (!config) {
+    logger.debug('No embedding configuration provided, skipping batch embedding generation');
+    return null;
+  }
 
   try {
-    const model = config?.model || DEFAULT_GEMINI_EMBEDDING_MODEL;
-    const dimensions = config?.dimensions || DEFAULT_EMBEDDING_DIMENSIONS;
+    const model = config.model;
+    const dimensions = config?.dimensions;
 
     logger.debug('Generating Gemini batch embeddings with usage tracking', {
       model,

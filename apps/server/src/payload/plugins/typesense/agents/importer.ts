@@ -56,6 +56,7 @@ export async function importHardcodedAgents(payload: Payload): Promise<ImportRes
                     welcomeTitle: agent.welcomeTitle,
                     welcomeSubtitle: agent.welcomeSubtitle,
                     suggestedQuestions: agent.suggestedQuestions,
+                    apiKey: agent.apiKey,
                 },
             })
 

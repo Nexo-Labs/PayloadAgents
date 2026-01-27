@@ -9,7 +9,6 @@ import {
   getChunkCollectionSchema,
   getFullDocumentCollectionSchema,
 } from "../../../shared/schema/collection-schemas.js";
-import { DEFAULT_EMBEDDING_DIMENSIONS } from "../../../core/config/constants.js";
 
 export class SchemaManager {
   constructor(
@@ -25,12 +24,16 @@ export class SchemaManager {
 
     logger.info('Starting schema synchronization...');
 
-    const embeddingDimensions = this.getEmbeddingDimensions();
+    const embeddingDimensions = this.config?.features?.embedding?.dimensions;
 
     for (const [collectionSlug, tableConfigs] of Object.entries(this.config.collections)) {
       if (!tableConfigs) continue;
 
       for (const tableConfig of tableConfigs as TableConfig<TypesenseFieldMapping>[]) {
+        if (!embeddingDimensions) {
+          console.warn(`Embedding dimensions not configured. Skipping schema sync for collection: ${collectionSlug}`);
+          continue;
+        }
         if (!tableConfig.enabled) continue;
 
         await this.syncTable(collectionSlug, tableConfig, embeddingDimensions);
@@ -105,13 +108,5 @@ export class SchemaManager {
         logger.error(`Failed to update collection ${tableName}`, error as Error);
       }
     }
-  }
-
-  private getEmbeddingDimensions(): number {
-    const embeddingConfig = this.config.features.embedding;
-    
-    if (embeddingConfig?.dimensions) {
-    }
-    return DEFAULT_EMBEDDING_DIMENSIONS;
   }
 }

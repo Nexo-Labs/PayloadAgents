@@ -115,11 +115,21 @@ export interface SpendingEntry {
 }
 
 /**
+ * Error data structure for SSE events
+ */
+export interface SSEErrorData {
+  error: string
+  message?: string
+  chatId?: string
+  [key: string]: unknown
+}
+
+/**
  * SSE event structure
  */
 export interface SSEEvent {
   type: SSEEventType
-  data: string | ChunkSource[] | { error: string } | UsageInfo
+  data: string | ChunkSource[] | SSEErrorData | UsageInfo
 }
 
 /**
@@ -321,7 +331,7 @@ export interface AgentConfig<SearchCollections extends string = string> {
    * Optional API Key for the LLM provider.
    * If provided, this overrides the global embedding provider API key for this agent.
    */
-  apiKey?: string;
+  apiKey: string;
   /**
    * System prompt that defines the agent's personality and constraints
    */
@@ -381,4 +391,25 @@ export interface AgentConfig<SearchCollections extends string = string> {
    * If empty/undefined, searches all content.
    */
   taxonomySlugs?: string[];
+  /**
+   * Maximum number of tokens the LLM can generate in responses.
+   * Default: 16000 (suitable for most use cases)
+   * Lower values save costs but may truncate responses.
+   * Higher values allow longer responses but cost more.
+   */
+  maxTokens?: number;
+  /**
+   * Temperature controls randomness in the model's output.
+   * Range: 0.0 to 2.0
+   * - Lower values (e.g., 0.3): More focused and deterministic
+   * - Higher values (e.g., 0.9): More creative and varied
+   * Default: 0.7
+   */
+  temperature?: number;
+  /**
+   * Top-p (nucleus sampling) controls diversity.
+   * Range: 0.0 to 1.0
+   * Default: 0.95
+   */
+  topP?: number;
 }

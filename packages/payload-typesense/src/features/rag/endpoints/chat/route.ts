@@ -13,6 +13,7 @@ import { saveChatSessionIfNeeded } from './handlers/session-handler.js'
 import { checkTokenLimitsIfNeeded } from './handlers/token-limit-handler.js'
 import { calculateTotalUsage, sendUsageStatsIfNeeded } from './handlers/usage-stats-handler.js'
 import { validateChatRequest } from './validators/index.js'
+import { markChatSessionAsExpired } from '../../chat-session-repository.js'
 import type { AgentConfig } from '@nexo-labs/payload-typesense'
 
 /**
@@ -247,6 +248,32 @@ export function createChatPOSTHandler(config: ChatEndpointConfig) {
             });
             controller.close();
           } catch (error) {
+            // Handle expired conversation error
+            if (error instanceof Error && error.message === 'EXPIRED_CONVERSATION') {
+              logger.warn('Expired conversation detected', {
+                userId,
+                chatId: body.chatId,
+              });
+
+              // Mark chat as expired in PayloadCMS
+              if (body.chatId) {
+                await markChatSessionAsExpired(payload, body.chatId, config.collectionName);
+              }
+
+              // Send specific error to client
+              sendSSEEvent(controller, encoder, {
+                type: 'error',
+                data: {
+                  error: 'EXPIRED_CONVERSATION',
+                  message: 'Esta conversación ha expirado (>24 horas de inactividad). Por favor, inicia una nueva conversación.',
+                  chatId: body.chatId,
+                },
+              });
+              controller.close();
+              return;
+            }
+
+            // Generic error (maintain current behavior)
             logger.error('Fatal error in chat stream', error as Error, {
               userId,
               chatId: body.chatId,

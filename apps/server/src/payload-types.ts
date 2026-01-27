@@ -376,6 +376,10 @@ export interface Agent {
    */
   llmModel: string;
   /**
+   * API Key for the LLM provider (optional)
+   */
+  apiKey: string;
+  /**
    * System prompt that defines the agent personality and constraints
    */
   systemPrompt: string;
@@ -700,6 +704,7 @@ export interface AgentsSelect<T extends boolean = true> {
   slug?: T;
   isActive?: T;
   llmModel?: T;
+  apiKey?: T;
   systemPrompt?: T;
   searchCollections?: T;
   taxonomies?: T;
