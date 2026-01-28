@@ -1,5 +1,11 @@
 # @nexo-labs/chat-agent
 
+## 1.8.0
+
+### Minor Changes
+
+- We added more functions to allow the package to become more customizable chat agents in payloadcms
+
 ## 1.7.4
 
 ### Patch Changes

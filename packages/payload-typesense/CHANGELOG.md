@@ -1,5 +1,16 @@
 # @nexo-labs/payload-typesense
 
+## 1.8.0
+
+### Minor Changes
+
+- We added more functions to allow the package to become more customizable chat agents in payloadcms
+
+### Patch Changes
+
+- Updated dependencies
+  - @nexo-labs/payload-indexer@1.8.0
+
 ## 1.7.4
 
 ### Patch Changes
