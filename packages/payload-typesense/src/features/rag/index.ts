@@ -55,7 +55,8 @@ export type {
 } from './chat-session-repository.js'
 
 export {
-    saveChatSession
+    saveChatSession,
+    markChatSessionAsExpired
 } from './chat-session-repository.js'
 
 // API Types

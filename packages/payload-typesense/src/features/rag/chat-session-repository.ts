@@ -47,6 +47,7 @@ interface ChatSessionDocument {
  * @param sources - Source chunks used for the response
  * @param spending - Token spending entries
  * @param collectionName - Collection name for sessions (default: 'chat-sessions')
+ * @param agentSlug - Slug of the agent used in this conversation (optional)
  */
 export async function saveChatSession(
   payload: Payload,
@@ -56,7 +57,8 @@ export async function saveChatSession(
   assistantMessage: string,
   sources: ChunkSource[],
   spending: SpendingEntry[],
-  collectionName: CollectionSlug
+  collectionName: CollectionSlug,
+  agentSlug?: string
 ): Promise<void> {
   try {
     // Check if session already exists
@@ -98,6 +100,7 @@ export async function saveChatSession(
         newAssistantMessage,
         spending,
         collectionName,
+        agentSlug,
       )
     } else {
       // Create new session
@@ -109,6 +112,7 @@ export async function saveChatSession(
         newAssistantMessage,
         spending,
         collectionName,
+        agentSlug,
       )
     }
   } catch (error) {
@@ -130,6 +134,7 @@ async function updateExistingSession<TSlug extends CollectionSlug>(
   newAssistantMessage: ChatMessageWithSources,
   spending: SpendingEntry[],
   collectionName: TSlug,
+  agentSlug?: string,
 ): Promise<void> {
   const existingMessages = (session.messages as ChatMessageWithSources[]) || []
   const existingSpending = (session.spending as SpendingEntry[]) || []
@@ -151,6 +156,8 @@ async function updateExistingSession<TSlug extends CollectionSlug>(
       total_cost: totalCost,
       last_activity: new Date().toISOString(),
       status: 'active',
+      // Only update agentSlug if provided and session doesn't have one yet
+      ...(agentSlug && !(session as any).agentSlug ? { agentSlug } : {}),
     } as any,
   })
 
@@ -173,6 +180,7 @@ async function createNewSession(
   newAssistantMessage: ChatMessageWithSources,
   spending: SpendingEntry[],
   collectionName: CollectionSlug,
+  agentSlug?: string,
 ): Promise<void> {
   const totalTokens = spending.reduce((sum, e) => sum + e.tokens.total, 0)
   const totalCost = spending.reduce((sum, e) => sum + (e.cost_usd || 0), 0)
@@ -183,6 +191,7 @@ async function createNewSession(
       user: userId as string,
       conversation_id: conversationId,
       status: 'active',
+      agentSlug,
       messages: [newUserMessage, newAssistantMessage],
       spending,
       total_tokens: totalTokens,
@@ -197,4 +206,52 @@ async function createNewSession(
     totalTokens,
     totalCost,
   })
+}
+
+/**
+ * Mark chat session as expired/closed
+ * Called when Typesense returns "conversation_id is invalid"
+ *
+ * @param payload - Payload CMS instance
+ * @param conversationId - Conversation ID that expired in Typesense
+ * @param collectionName - Collection name for sessions
+ * @returns true if session was found and marked as expired, false otherwise
+ */
+export async function markChatSessionAsExpired(
+  payload: Payload,
+  conversationId: string,
+  collectionName: CollectionSlug,
+): Promise<boolean> {
+  try {
+    const existing = await payload.find({
+      collection: collectionName,
+      where: { conversation_id: { equals: conversationId } },
+      limit: 1,
+    })
+
+    if (existing.docs.length > 0 && existing.docs[0]) {
+      await payload.update({
+        collection: collectionName,
+        id: existing.docs[0].id,
+        data: {
+          status: 'closed',
+          closed_at: new Date().toISOString(),
+        } as any,
+      })
+
+      logger.info('Chat session marked as expired', {
+        conversationId,
+        sessionId: existing.docs[0].id,
+      })
+
+      return true
+    }
+
+    return false
+  } catch (error) {
+    logger.error('Error marking chat session as expired', error as Error, {
+      conversationId,
+    })
+    return false
+  }
 }

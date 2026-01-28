@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { EmbeddingProvider, EmbeddingResult, BatchEmbeddingResult, OpenAIProviderConfig } from "../types.js";
 import type { Logger } from "../../core/logging/logger.js";
-import { DEFAULT_EMBEDDING_MODEL, DEFAULT_EMBEDDING_DIMENSIONS, MIN_EMBEDDING_TEXT_LENGTH } from "../../core/config/constants.js";
+import { MIN_EMBEDDING_TEXT_LENGTH } from "../../core/config/constants.js";
 
 export class OpenAIEmbeddingProvider implements EmbeddingProvider {
   private client: OpenAI;
@@ -16,8 +16,8 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
       throw new Error("OpenAI API key is required");
     }
     this.client = new OpenAI({ apiKey: config.apiKey });
-    this.model = config.model || DEFAULT_EMBEDDING_MODEL;
-    this.dimensions = config.dimensions || DEFAULT_EMBEDDING_DIMENSIONS;
+    this.model = config.model;
+    this.dimensions = config.dimensions;
   }
 
   async generateEmbedding(text: string): Promise<EmbeddingResult | null> {

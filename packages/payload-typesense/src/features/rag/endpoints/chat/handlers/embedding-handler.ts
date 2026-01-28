@@ -2,7 +2,6 @@ import type { ChatEndpointConfig } from '../route.js';
 import {
   Logger,
   logger,
-  DEFAULT_EMBEDDING_MODEL,
   EmbeddingServiceImpl,
   OpenAIEmbeddingProvider,
   GeminiEmbeddingProvider,
@@ -67,17 +66,16 @@ export async function generateEmbeddingWithTracking(
 
   // Track embedding spending if function provided
   // We use model from config or default
-  const modelUsed = model || DEFAULT_EMBEDDING_MODEL;
 
   if (config.createEmbeddingSpending) {
     const embeddingSpending = config.createEmbeddingSpending(
-      modelUsed,
+      model,
       resultWithUsage.usage.totalTokens
     );
     spendingEntries.push(embeddingSpending);
 
     logger.info('Embedding generated successfully', {
-      model: modelUsed,
+      model,
       totalTokens: resultWithUsage.usage.totalTokens,
       costUsd: embeddingSpending.cost_usd,
     });

@@ -9,9 +9,9 @@ export const TypesenseSyncWidget: React.FC = () => {
       style={{
         padding: "20px",
         marginTop: "20px",
-        backgroundColor: "#f8fafc",
+        backgroundColor: "var(--theme-elevation-50)",
         borderRadius: "8px",
-        border: "1px solid #e2e8f0",
+        border: "1px solid var(--theme-elevation-100)",
       }}
     >
       <h3
@@ -19,7 +19,7 @@ export const TypesenseSyncWidget: React.FC = () => {
           margin: "0 0 8px 0",
           fontSize: "16px",
           fontWeight: 600,
-          color: "#1e293b",
+          color: "var(--theme-text)",
         }}
       >
         Typesense Search Index
@@ -28,7 +28,7 @@ export const TypesenseSyncWidget: React.FC = () => {
         style={{
           margin: "0 0 16px 0",
           fontSize: "14px",
-          color: "#64748b",
+          color: "var(--theme-elevation-500)",
         }}
       >
         Sincroniza manualmente todos los documentos de Pages con el indice de

@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI, TaskType } from "@google/generative-ai";
 import type { EmbeddingProvider, EmbeddingResult, BatchEmbeddingResult, GeminiProviderConfig } from "../types.js";
 import type { Logger } from "../../core/logging/logger.js";
-import { DEFAULT_GEMINI_EMBEDDING_MODEL, MIN_EMBEDDING_TEXT_LENGTH } from "../../core/config/constants.js";
+import { MIN_EMBEDDING_TEXT_LENGTH } from "../../core/config/constants.js";
 
 export class GeminiEmbeddingProvider implements EmbeddingProvider {
   private client: GoogleGenerativeAI;
@@ -15,7 +15,7 @@ export class GeminiEmbeddingProvider implements EmbeddingProvider {
       throw new Error("Gemini API key is required");
     }
     this.client = new GoogleGenerativeAI(config.apiKey);
-    this.model = config.model || DEFAULT_GEMINI_EMBEDDING_MODEL;
+    this.model = config.model;
   }
 
   async generateEmbedding(text: string): Promise<EmbeddingResult | null> {

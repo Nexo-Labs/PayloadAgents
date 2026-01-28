@@ -107,8 +107,8 @@ export type GeminiDimensionsByModel = {
  */
 export interface OpenAIProviderConfig {
   type: "openai";
-  model?: OpenAIEmbeddingModel;
-  dimensions?: OpenAIDimensionsByModel[OpenAIEmbeddingModel];
+  model: OpenAIEmbeddingModel;
+  dimensions: OpenAIDimensionsByModel[OpenAIEmbeddingModel];
   apiKey: string;
 }
 
@@ -117,8 +117,8 @@ export interface OpenAIProviderConfig {
  */
 export interface GeminiProviderConfig {
   type: "gemini";
-  model?: GeminiEmbeddingModel;
-  dimensions?: GeminiDimensionsByModel[GeminiEmbeddingModel];
+  model: GeminiEmbeddingModel;
+  dimensions: GeminiDimensionsByModel[GeminiEmbeddingModel];
   apiKey: string;
 }
 

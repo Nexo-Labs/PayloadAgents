@@ -101,7 +101,7 @@ export interface TokenUsage {
 /**
  * Service types for spending tracking
  */
-export type ServiceType = 'openai_embedding' | 'openai_llm'
+export type ServiceType = 'openai_embedding' | 'openai_llm' | 'gemini_embedding' | 'gemini_llm'
 
 /**
  * Spending entry for tracking AI service costs
@@ -115,11 +115,21 @@ export interface SpendingEntry {
 }
 
 /**
+ * Error data structure for SSE events
+ */
+export interface SSEErrorData {
+  error: string
+  message?: string
+  chatId?: string
+  [key: string]: unknown
+}
+
+/**
  * SSE event structure
  */
 export interface SSEEvent {
   type: SSEEventType
-  data: string | ChunkSource[] | { error: string } | UsageInfo
+  data: string | ChunkSource[] | SSEErrorData | UsageInfo
 }
 
 /**
@@ -175,6 +185,8 @@ export interface TypesenseQueryConfig {
   kResults?: number
   /** Advanced search config */
   advancedConfig?: AdvancedSearchConfig
+  /** Taxonomy slugs to filter RAG content */
+  taxonomySlugs?: string[]
 }
 
 /**
@@ -243,6 +255,7 @@ export interface RAGCallbacks {
     sources: ChunkSource[],
     spending: SpendingEntry[],
     collectionName: CollectionSlug,
+    agentSlug?: string,
   ) => Promise<void>;
   /** Create embedding spending function (optional) */
   createEmbeddingSpending?: (model: string, tokens: number) => SpendingEntry;
@@ -261,10 +274,15 @@ export interface RAGConfig {
   advanced?: AdvancedSearchConfig
 }
 
+/**
+ * Function that retrieves agents dynamically (e.g. from DB)
+ */
+export type AgentProvider = (payload: Payload) => Promise<AgentConfig[]>;
+
 export interface RAGFeatureConfig extends RAGConfig {
   enabled: boolean;
   callbacks?: RAGCallbacks;
-  agents: AgentConfig[];
+  agents: AgentConfig[] | AgentProvider;
 }
 
 
@@ -299,7 +317,7 @@ export type TypesenseConnectionConfig = {
 /**
  * Configuration for a single conversational agent
  */
-export interface AgentConfig {
+export interface AgentConfig<SearchCollections extends string = string> {
   /**
    * Unique identifier for the agent (used in API requests)
    */
@@ -308,12 +326,12 @@ export interface AgentConfig {
    * Display name for the agent (shown in UI)
    * If not provided, slug will be used.
    */
-  name?: string;
+  name: string;
   /**
    * Optional API Key for the LLM provider.
    * If provided, this overrides the global embedding provider API key for this agent.
    */
-  apiKey?: string;
+  apiKey: string;
   /**
    * System prompt that defines the agent's personality and constraints
    */
@@ -325,7 +343,7 @@ export interface AgentConfig {
   /**
    * Collections this agent is allowed to search in
    */
-  searchCollections: string[];
+  searchCollections: SearchCollections[];
   /**
    * Maximum context size in bytes. Default: 65536 (64KB)
    */
@@ -335,11 +353,63 @@ export interface AgentConfig {
    */
   ttl?: number;
   /**
-   * Name of the conversation history collection. Default: 'conversation_history'
-   */
-  historyCollection?: string;
-  /**
    * Number of chunks to retrieve for RAG context. Default: 10
    */
   kResults?: number;
+  /**
+   * Welcome message title displayed when starting a new chat
+   */
+  welcomeTitle?: string;
+  /**
+   * Welcome message subtitle displayed when starting a new chat
+   */
+  welcomeSubtitle?: string;
+  /**
+   * Suggested questions displayed to help users get started
+   */
+  suggestedQuestions?: Array<{
+    /**
+     * The full prompt text to send when clicked
+     */
+    prompt: string;
+    /**
+     * Short title for the suggestion
+     */
+    title: string;
+    /**
+     * Brief description of what the question is about
+     */
+    description: string;
+  }>;
+  /**
+   * Avatar URL for the agent (displayed in chat header and floating button)
+   * If not provided, a default avatar will be used
+   */
+  avatar?: string;
+  /**
+   * Taxonomy slugs to filter RAG content.
+   * If empty/undefined, searches all content.
+   */
+  taxonomySlugs?: string[];
+  /**
+   * Maximum number of tokens the LLM can generate in responses.
+   * Default: 16000 (suitable for most use cases)
+   * Lower values save costs but may truncate responses.
+   * Higher values allow longer responses but cost more.
+   */
+  maxTokens?: number;
+  /**
+   * Temperature controls randomness in the model's output.
+   * Range: 0.0 to 2.0
+   * - Lower values (e.g., 0.3): More focused and deterministic
+   * - Higher values (e.g., 0.9): More creative and varied
+   * Default: 0.7
+   */
+  temperature?: number;
+  /**
+   * Top-p (nucleus sampling) controls diversity.
+   * Range: 0.0 to 1.0
+   * Default: 0.95
+   */
+  topP?: number;
 }

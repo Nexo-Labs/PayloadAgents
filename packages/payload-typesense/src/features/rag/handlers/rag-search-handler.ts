@@ -28,6 +28,8 @@ export type RAGSearchConfig = {
     prefix?: boolean
     dropTokensThreshold?: number
   }
+  /** Taxonomy slugs to filter RAG content */
+  taxonomySlugs?: string[]
 }
 
 /**
@@ -95,6 +97,7 @@ export async function executeRAGSearch(
     searchCollections: searchConfig.searchCollections,
     kResults: searchConfig.kResults || 10,
     advancedConfig: searchConfig.advancedConfig,
+    taxonomySlugs: searchConfig.taxonomySlugs,
   })
 
   // Execute the search
@@ -109,6 +112,14 @@ export async function executeRAGSearch(
 
   if (!response.ok) {
     const errorText = await response.text()
+
+    // Detect expired conversation error
+    if (errorText.includes('conversation_id') && errorText.includes('invalid')) {
+      const error = new Error('EXPIRED_CONVERSATION')
+      ;(error as any).cause = errorText
+      throw error
+    }
+
     throw new Error(`Typesense search failed: ${errorText}`)
   }
 

@@ -1,5 +1,4 @@
 import type { CollectionCreateSchema } from "typesense/lib/Typesense/Collections.js";
-import { DEFAULT_EMBEDDING_DIMENSIONS } from "../../core/config/constants.js";
 import type { TableConfig } from "@nexo-labs/payload-indexer";
 import type { TypesenseFieldMapping } from "../../adapter/types.js";
 
@@ -32,7 +31,7 @@ const getBaseFields = () => [
  */
 const getEmbeddingField = (
   optional: boolean = true,
-  dimensions: number = DEFAULT_EMBEDDING_DIMENSIONS
+  dimensions: number
 ) => ({
   name: "embedding",
   type: "float[]" as const,
@@ -70,7 +69,7 @@ const getChunkFields = () => [
 export const getChunkCollectionSchema = (
   collectionSlug: string,
   tableConfig: TableConfig<TypesenseFieldMapping>,
-  embeddingDimensions: number = DEFAULT_EMBEDDING_DIMENSIONS
+  embeddingDimensions: number
 ) => {
   const fields = tableConfig.fields ? mapFieldMappingsToSchema(tableConfig.fields) : [];
   
@@ -100,7 +99,7 @@ export const getChunkCollectionSchema = (
 export const getFullDocumentCollectionSchema = (
   collectionSlug: string,
   tableConfig: TableConfig<TypesenseFieldMapping>,
-  embeddingDimensions: number = DEFAULT_EMBEDDING_DIMENSIONS
+  embeddingDimensions: number
 ) => {
   const mappedFields = mapFieldMappingsToSchema(tableConfig.fields);
   
