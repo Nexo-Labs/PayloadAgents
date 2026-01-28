@@ -1,130 +1,193 @@
-import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from 'payload'
-import { Client } from 'typesense'
+import type {
+  CollectionAfterChangeHook,
+  CollectionAfterDeleteHook,
+} from "payload";
+
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
+/**
+ * Sleep helper for retry delays
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * Re-sync agent with Typesense after changes
+ * Includes retry mechanism for transient failures
  */
-export const afterChangeHook: CollectionAfterChangeHook = async ({ doc, req, operation }) => {
+export const afterChangeHook: CollectionAfterChangeHook = async ({
+  doc,
+  req,
+  operation,
+}) => {
   // Only sync if it's an update or create operation on an active agent
   if (!doc.isActive) {
-    console.log(`[Agents] Skipping sync for inactive agent: ${doc.slug}`)
-    return doc
+    console.log(`[Agents] Skipping sync for inactive agent: ${doc.slug}`);
+    return doc;
   }
 
-  try {
-    console.log(`[Agents] Re-syncing agent "${doc.slug}" with Typesense after ${operation}...`)
+  console.log(
+    `[Agents] Re-syncing agent "${doc.slug}" with Typesense after ${operation}...`,
+  );
 
-    // Get Typesense config from environment
-    const typesenseConfig = {
-      nodes: [
-        {
-          host: process.env.TYPESENSE_HOST || 'localhost',
-          port: parseInt(process.env.TYPESENSE_PORT || '8108'),
-          protocol: (process.env.TYPESENSE_PROTOCOL || 'http') as 'http' | 'https',
-        },
-      ],
-      apiKey: process.env.TYPESENSE_API_KEY || '',
-    }
+  // Get Typesense config from environment
+  const typesenseConfig = {
+    nodes: [
+      {
+        host: process.env.TYPESENSE_HOST || "localhost",
+        port: parseInt(process.env.TYPESENSE_PORT || "8108"),
+        protocol: (process.env.TYPESENSE_PROTOCOL || "http") as
+          | "http"
+          | "https",
+      },
+    ],
+    apiKey: process.env.TYPESENSE_API_KEY || "",
+  };
 
-    const client = new Client(typesenseConfig)
+  const modelConfig = {
+    id: doc.slug,
+    model_name: doc.llmModel,
+    system_prompt: doc.systemPrompt,
+    api_key: doc.apiKey,
+    history_collection: `conversation_history_${doc.slug}`,
+    max_bytes: doc.maxContextBytes || 65536,
+    ttl: doc.ttl || 86400,
+    k_results: doc.kResults || 5,
+    max_tokens: 16000,
+    temperature: 0.7,
+    top_p: 0.95,
+  };
+  const [node] = typesenseConfig.nodes;
+  if (!node) {
+    console.warn("[Agents] Typesense is not configured");
+    return;
+  }
 
-    // Build model config for Typesense
-    const modelConfig = {
-      id: doc.slug,
-      model_name: doc.llmModel,
-      system_prompt: doc.systemPrompt,
-      api_key: doc.apiKey,
-      history_collection: `conversation_history_${doc.slug}`,
-      max_bytes: doc.maxContextBytes || 65536,
-      ttl: doc.ttl || 86400,
-      k_results: doc.kResults || 5,
-      max_tokens: 16000, // Default
-      temperature: 0.7,
-      top_p: 0.95,
-    }
+  const baseUrl = `${node.protocol}://${node.host}:${node.port}`;
 
-    // Try to update, fall back to create if doesn't exist
-    const baseUrl = `${typesenseConfig.nodes[0].protocol}://${typesenseConfig.nodes[0].host}:${typesenseConfig.nodes[0].port}`
+  let lastError: Error | null = null;
+  let syncSucceeded = false;
 
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const updateResponse = await fetch(`${baseUrl}/conversations/models/${doc.slug}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-TYPESENSE-API-KEY': typesenseConfig.apiKey,
-        },
-        body: JSON.stringify(modelConfig),
-      })
-
-      if (updateResponse.ok) {
-        console.log(`[Agents] ✓ Agent "${doc.slug}" updated in Typesense`)
-      } else if (updateResponse.status === 404) {
-        // Model doesn't exist, create it
-        const createResponse = await fetch(`${baseUrl}/conversations/models`, {
-          method: 'POST',
+      const updateResponse = await fetch(
+        `${baseUrl}/conversations/models/${doc.slug}`,
+        {
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
-            'X-TYPESENSE-API-KEY': typesenseConfig.apiKey,
+            "Content-Type": "application/json",
+            "X-TYPESENSE-API-KEY": typesenseConfig.apiKey,
           },
           body: JSON.stringify(modelConfig),
-        })
+        },
+      );
+
+      if (updateResponse.ok) {
+        console.log(`[Agents] ✓ Agent "${doc.slug}" updated in Typesense`);
+        syncSucceeded = true;
+        break;
+      } else if (updateResponse.status === 404) {
+        const createResponse = await fetch(`${baseUrl}/conversations/models`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-TYPESENSE-API-KEY": typesenseConfig.apiKey,
+          },
+          body: JSON.stringify(modelConfig),
+        });
 
         if (createResponse.ok) {
-          console.log(`[Agents] ✓ Agent "${doc.slug}" created in Typesense`)
+          console.log(`[Agents] ✓ Agent "${doc.slug}" created in Typesense`);
+          syncSucceeded = true;
+          break;
         } else {
-          const errorText = await createResponse.text()
-          console.error(`[Agents] ✗ Failed to create agent in Typesense:`, errorText)
+          const errorText = await createResponse.text();
+          lastError = new Error(`Create failed: ${errorText}`);
         }
       } else {
-        const errorText = await updateResponse.text()
-        console.error(`[Agents] ✗ Failed to update agent in Typesense:`, errorText)
+        const errorText = await updateResponse.text();
+        lastError = new Error(`Update failed: ${errorText}`);
       }
     } catch (error) {
-      console.error(`[Agents] ✗ Error syncing agent with Typesense:`, error)
+      lastError = error instanceof Error ? error : new Error(String(error));
     }
-  } catch (error) {
-    console.error(`[Agents] Error in afterChange hook:`, error)
+
+    // Log retry attempt
+    if (attempt < MAX_RETRIES) {
+      const delay = RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+      console.warn(
+        `[Agents] Sync attempt ${attempt}/${MAX_RETRIES} failed. Retrying in ${delay}ms...`,
+      );
+      await sleep(delay);
+    }
   }
 
-  return doc
-}
+  // Final error handling - log clearly if sync failed after all retries
+  if (!syncSucceeded) {
+    console.error(
+      `[Agents] ✗ SYNC FAILED after ${MAX_RETRIES} attempts for agent "${doc.slug}"`,
+    );
+    console.error(`[Agents] ✗ Last error: ${lastError?.message}`);
+    console.error(
+      `[Agents] ⚠️ INCONSISTENCY: Agent "${doc.slug}" exists in PayloadCMS but NOT in Typesense!`,
+    );
+    // TODO: Consider adding to a dead-letter queue or sending an alert
+  }
+
+  return doc;
+};
 
 /**
  * Delete agent from Typesense after deletion from PayloadCMS
  */
 export const afterDeleteHook: CollectionAfterDeleteHook = async ({ doc }) => {
   try {
-    console.log(`[Agents] Deleting agent "${doc.slug}" from Typesense...`)
+    console.log(`[Agents] Deleting agent "${doc.slug}" from Typesense...`);
 
     const typesenseConfig = {
       nodes: [
         {
-          host: process.env.TYPESENSE_HOST || 'localhost',
-          port: parseInt(process.env.TYPESENSE_PORT || '8108'),
-          protocol: (process.env.TYPESENSE_PROTOCOL || 'http') as 'http' | 'https',
+          host: process.env.TYPESENSE_HOST || "localhost",
+          port: parseInt(process.env.TYPESENSE_PORT || "8108"),
+          protocol: (process.env.TYPESENSE_PROTOCOL || "http") as
+            | "http"
+            | "https",
         },
       ],
-      apiKey: process.env.TYPESENSE_API_KEY || '',
+      apiKey: process.env.TYPESENSE_API_KEY || "",
+    };
+
+    const [node] = typesenseConfig.nodes;
+    if (!node) {
+      console.warn("[Agents] Typesense is not configured");
+      return;
     }
+    const baseUrl = `${node.protocol}://${node.host}:${node.port}`;
 
-    const baseUrl = `${typesenseConfig.nodes[0].protocol}://${typesenseConfig.nodes[0].host}:${typesenseConfig.nodes[0].port}`
-
-    const deleteResponse = await fetch(`${baseUrl}/conversations/models/${doc.slug}`, {
-      method: 'DELETE',
-      headers: {
-        'X-TYPESENSE-API-KEY': typesenseConfig.apiKey,
+    const deleteResponse = await fetch(
+      `${baseUrl}/conversations/models/${doc.slug}`,
+      {
+        method: "DELETE",
+        headers: {
+          "X-TYPESENSE-API-KEY": typesenseConfig.apiKey,
+        },
       },
-    })
+    );
 
     if (deleteResponse.ok) {
-      console.log(`[Agents] ✓ Agent "${doc.slug}" deleted from Typesense`)
+      console.log(`[Agents] ✓ Agent "${doc.slug}" deleted from Typesense`);
     } else {
-      const errorText = await deleteResponse.text()
-      console.error(`[Agents] ✗ Failed to delete agent from Typesense:`, errorText)
+      const errorText = await deleteResponse.text();
+      console.error(
+        `[Agents] ✗ Failed to delete agent from Typesense:`,
+        errorText,
+      );
     }
   } catch (error) {
-    console.error(`[Agents] Error in afterDelete hook:`, error)
+    console.error(`[Agents] Error in afterDelete hook:`, error);
   }
 
-  return doc
-}
+  return doc;
+};

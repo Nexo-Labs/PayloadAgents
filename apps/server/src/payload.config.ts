@@ -8,14 +8,13 @@ import { Pages } from './collections/Pages'
 import { Tenants } from './collections/Tenants'
 import { ChatSessions } from './collections/ChatSessions'
 import { Agents } from './collections/Agents'
+import { Taxonomies } from './collections/Taxonomies'
 import { Media } from './collections/Media'
 import Users from './collections/Users'
-import { taxonomiesCollection } from '@nexo-labs/payload-taxonomies'
-import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
-import { isSuperAdmin } from './access/isSuperAdmin'
+import { importExportPlugin } from './payload/plugins/import-export'
 import { typesensePlugin } from './payload/plugins/typesense'
-import type { Config } from './payload-types'
-import { getUserTenantIDs } from './utilities/getUserTenantIDs'
+import { multiTenantPlugin } from './payload/plugins/multi-tenant'
+import { nestedDocsPlugin } from './payload/plugins/nested-docs'
 import { seed } from './seed'
 import authJs from './modules/authjs'
 import { migrations } from './migrations'
@@ -31,7 +30,7 @@ export default buildConfig({
       afterDashboard: ['@/modules/payload-admin/typesense-sync-widget'],
     },
   },
-  collections: [Pages, Users, Tenants, ChatSessions, Agents, Media, taxonomiesCollection({})],
+  collections: [Pages, Users, Tenants, ChatSessions, Agents, Media, Taxonomies],
   db: postgresAdapter({
     push: false,
     prodMigrations: migrations,
@@ -53,26 +52,9 @@ export default buildConfig({
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   plugins: [
-    multiTenantPlugin<Config>({
-      collections: {
-        pages: {},
-      },
-      tenantField: {
-        access: {
-          read: () => true,
-          update: ({ req }) => {
-            if (isSuperAdmin(req.user)) {
-              return true
-            }
-            return getUserTenantIDs(req.user).length > 0
-          },
-        },
-      },
-      tenantsArrayField: {
-        includeDefaultField: false,
-      },
-      userHasAccessToAllTenants: (user) => isSuperAdmin(user),
-    }),
+    importExportPlugin,
+    nestedDocsPlugin,
+    multiTenantPlugin,
     typesensePlugin,
     authJs,
   ],

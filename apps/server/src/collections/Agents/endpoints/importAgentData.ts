@@ -39,6 +39,37 @@ function normalizeLinks(links?: Array<{ url?: string; title?: string } | string>
 }
 
 /**
+ * Validate a data entry has required fields and correct types
+ */
+function validateDataEntry(entry: unknown, lineNumber?: number): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
+  const prefix = lineNumber !== undefined ? `Line ${lineNumber}: ` : ''
+
+  if (!entry || typeof entry !== 'object') {
+    return { valid: false, errors: [`${prefix}Entry is not a valid object`] }
+  }
+
+  const data = entry as Record<string, unknown>
+
+  // Required: id
+  if (!data.id || typeof data.id !== 'string') {
+    errors.push(`${prefix}Missing or invalid 'id' field (required string)`)
+  }
+
+  // Required: title (or we generate one)
+  if (data.title !== undefined && typeof data.title !== 'string') {
+    errors.push(`${prefix}Invalid 'title' field (expected string)`)
+  }
+
+  // content_markdown should be string if present
+  if (data.content_markdown !== undefined && typeof data.content_markdown !== 'string') {
+    errors.push(`${prefix}Invalid 'content_markdown' field (expected string)`)
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+/**
  * Endpoint to import data from {slug}_data.json or {slug}_data.jsonl into Pages collection
  * POST /api/agents/:id/import-data
  */
@@ -125,12 +156,21 @@ export const importAgentData: Endpoint = {
           crlfDelay: Infinity,
         })
 
+        let lineNumber = 0
         for await (const line of rl) {
+          lineNumber++
           if (!line.trim()) continue
           try {
-            entries.push(JSON.parse(line))
+            const parsed = JSON.parse(line)
+            // Validate the entry before adding
+            const validation = validateDataEntry(parsed, lineNumber)
+            if (validation.valid) {
+              entries.push(parsed)
+            } else {
+              results.errors.push(...validation.errors)
+            }
           } catch {
-            results.errors.push(`Failed to parse line: ${line.substring(0, 50)}...`)
+            results.errors.push(`Line ${lineNumber}: Failed to parse JSON: ${line.substring(0, 50)}...`)
           }
         }
       } else {
@@ -171,6 +211,30 @@ export const importAgentData: Endpoint = {
             results.skipped.push(entry.id)
             continue
           }
+
+          // Generate unique slug - check for conflicts
+          let baseSlug = `${slug}-${entry.id}`
+          let finalSlug = baseSlug
+          let slugCounter = 0
+
+          while (true) {
+            const slugExists = await req.payload.find({
+              collection: 'pages',
+              where: { slug: { equals: finalSlug } },
+              limit: 1,
+            })
+
+            if (slugExists.docs.length === 0) break
+
+            slugCounter++
+            finalSlug = `${baseSlug}-${slugCounter}`
+
+            if (slugCounter > 10) {
+              results.errors.push(`Entry ${entry.id}: Could not generate unique slug after 10 attempts`)
+              continue
+            }
+          }
+
           const editor = await editorConfigFactory.default({
             config: req.payload.config,
           })
@@ -181,10 +245,10 @@ export const importAgentData: Endpoint = {
             data: {
               tenant,
               title: entry.title || `Post ${entry.id}`,
-              slug: `${slug}-${entry.id}`,
+              slug: finalSlug,
               external_id: entry.id,
               url: entry.url,
-              content: convertMarkdownToLexical({markdown: contentText, editorConfig: editor}),
+              content: convertMarkdownToLexical({ markdown: contentText, editorConfig: editor }),
               related_links_videos: normalizeLinks(entry.related_links?.videos),
               related_links_books: normalizeLinks(entry.related_links?.books),
               related_links_other: normalizeLinks(entry.related_links?.other),

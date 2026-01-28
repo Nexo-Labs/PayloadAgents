@@ -1,3 +1,4 @@
+import { auth } from '@/modules/authjs/plugins'
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto'
 
 const ALGORITHM = 'aes-256-gcm'
@@ -69,15 +70,17 @@ export function decrypt(ciphertext: string): string {
         return ciphertext
     }
 
-    // Check if the value looks like it's encrypted (has the expected format)
     const parts = ciphertext.split(':')
     if (parts.length !== 4) {
-        // Not encrypted (legacy data or plain text), return as-is
         console.warn('[Encryption] Value does not appear to be encrypted, returning as-is')
         return ciphertext
     }
 
     const [saltB64, ivB64, authTagB64, encryptedB64] = parts
+    if (!saltB64 || !ivB64 || !authTagB64 || !encryptedB64) {
+        console.warn('[Encryption] Value does not appear to be encrypted, returning as-is')
+        return ciphertext
+    }
 
     try {
         const salt = Buffer.from(saltB64, 'base64')

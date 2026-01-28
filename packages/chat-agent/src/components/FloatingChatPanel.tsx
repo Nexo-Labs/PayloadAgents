@@ -64,34 +64,36 @@ const FloatingChatPanel = ({
               width: "100vw",
               borderRadius: "0px",
             }}
-            animate={() => {
-              if (isMaximized) {
-                return {
-                  x: 0,
-                  left: 0,
-                  top: 0,
-                  right: 0,
-                  bottom: 0,
-                  width: "100vw",
-                  height: "100vh",
-                  borderRadius: "0px",
-                }
-              }
-              // Calculate mobile/tablet state once
-              const isMobileOrTablet = typeof window !== "undefined" && window.innerWidth < 1024
-              return {
+            animate={
+              isMaximized ? {
                 x: 0,
-                // En movil/tablet: fullscreen, en desktop: panel lateral
-                left: isMobileOrTablet ? 0 : "1rem",
-                top: isMobileOrTablet ? 0 : "5rem",
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                width: "100vw",
+                height: "100vh",
+                borderRadius: "0px",
+              } : (typeof window !== "undefined" && window.innerWidth < 1024) ? {
+                x: 0,
+                left: 0,
+                top: 0,
                 right: "auto",
-                bottom: isMobileOrTablet ? 0 : "1rem",
-                // Movil/Tablet: 100vw (fullscreen), Desktop: 33.333333%
-                width: isMobileOrTablet ? "100vw" : "33.333333%",
-                height: isMobileOrTablet ? "100vh" : "auto",
-                borderRadius: isMobileOrTablet ? "0px" : "0.75rem",
+                bottom: 0,
+                width: "100vw",
+                height: "100vh",
+                borderRadius: "0px",
+              } : {
+                x: 0,
+                left: "1rem",
+                top: "5rem",
+                right: "auto",
+                bottom: "1rem",
+                width: "33.333333%",
+                height: "auto",
+                borderRadius: "0.75rem",
               }
-            }}
+            }
             exit={{
               x: "-100vw",
               transition: {

@@ -1,6 +1,5 @@
-import type { CollectionConfig } from 'payload'
+import { slugField, type CollectionConfig } from 'payload'
 
-import { ensureUniqueSlug } from './hooks/ensureUniqueSlug'
 import { superAdminOrTenantAdminAccess } from '@/collections/Pages/access/superAdminOrTenantAdmin'
 import { syncToTypesense } from './endpoints/syncToTypesense'
 import { buildTaxonomyRelationship } from '@nexo-labs/payload-taxonomies'
@@ -29,15 +28,7 @@ export const Pages: CollectionConfig = {
       name: 'title',
       type: 'text',
     },
-    {
-      name: 'slug',
-      type: 'text',
-      defaultValue: 'home',
-      hooks: {
-        beforeValidate: [ensureUniqueSlug],
-      },
-      index: true,
-    },
+    slugField({useAsSlug: 'title'}),
     {
       name: 'external_id',
       type: 'text',

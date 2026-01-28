@@ -18,9 +18,18 @@ import { transformTenant } from './transforms'
 const transformCategories = (categories: unknown): string[] => {
   if (!categories || !Array.isArray(categories)) return []
   return categories
-    .map((cat) =>
-      typeof cat === 'object' && cat !== null ? (cat as { slug?: string }).slug : cat
-    )
+    .map((cat) => {
+      if (typeof cat === 'object' && cat !== null) {
+        return (cat as { slug?: string }).slug
+      }
+      if (typeof cat === 'string') {
+        return cat
+      }
+      if (typeof cat === 'number') {
+        return String(cat)
+      }
+      return null
+    })
     .filter((slug): slug is string => Boolean(slug))
 }
 

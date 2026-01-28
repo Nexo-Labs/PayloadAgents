@@ -6,6 +6,15 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE TYPE "public"."enum_users_tenants_roles" AS ENUM('tenant-admin', 'tenant-viewer');
   CREATE TYPE "public"."enum_chat_sessions_status" AS ENUM('active', 'closed');
   CREATE TYPE "public"."enum_agents_search_collections" AS ENUM('pages_chunk');
+  CREATE TYPE "public"."enum_exports_format" AS ENUM('csv', 'json');
+  CREATE TYPE "public"."enum_exports_sort_order" AS ENUM('asc', 'desc');
+  CREATE TYPE "public"."enum_exports_drafts" AS ENUM('yes', 'no');
+  CREATE TYPE "public"."enum_imports_collection_slug" AS ENUM('agents', 'taxonomy', 'pages');
+  CREATE TYPE "public"."enum_imports_import_mode" AS ENUM('create', 'update', 'upsert');
+  CREATE TYPE "public"."enum_imports_status" AS ENUM('pending', 'completed', 'partial', 'failed');
+  CREATE TYPE "public"."enum_payload_jobs_log_task_slug" AS ENUM('inline', 'createCollectionExport', 'createCollectionImport');
+  CREATE TYPE "public"."enum_payload_jobs_log_state" AS ENUM('failed', 'succeeded');
+  CREATE TYPE "public"."enum_payload_jobs_task_slug" AS ENUM('inline', 'createCollectionExport', 'createCollectionImport');
   CREATE TABLE "pages_related_links_videos" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
@@ -34,7 +43,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"id" serial PRIMARY KEY NOT NULL,
   	"tenant_id" integer,
   	"title" varchar,
-  	"slug" varchar DEFAULT 'home',
+  	"generate_slug" boolean DEFAULT true,
+  	"slug" varchar NOT NULL,
   	"external_id" varchar,
   	"url" varchar,
   	"content" jsonb,
@@ -150,7 +160,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"generate_slug" boolean DEFAULT true,
   	"slug" varchar NOT NULL,
   	"is_active" boolean DEFAULT true,
-    "llm_model" varchar DEFAULT 'openai/gpt-4o-mini' NOT NULL,
+  	"llm_model" varchar DEFAULT 'openai/gpt-4o-mini' NOT NULL,
   	"api_key" varchar NOT NULL,
   	"system_prompt" varchar NOT NULL,
   	"k_results" numeric DEFAULT 5,
@@ -211,20 +221,115 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"sizes_medium_filename" varchar
   );
   
+  CREATE TABLE "taxonomy_breadcrumbs" (
+  	"_order" integer NOT NULL,
+  	"_parent_id" integer NOT NULL,
+  	"id" varchar PRIMARY KEY NOT NULL,
+  	"doc_id" integer,
+  	"url" varchar,
+  	"label" varchar
+  );
+  
   CREATE TABLE "taxonomy" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"name" varchar NOT NULL,
   	"generate_slug" boolean DEFAULT true,
   	"slug" varchar NOT NULL,
   	"payload" jsonb,
+  	"parent_id" integer,
   	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
   	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
+  );
+  
+  CREATE TABLE "exports" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"name" varchar,
+  	"format" "enum_exports_format" DEFAULT 'csv',
+  	"limit" numeric,
+  	"page" numeric DEFAULT 1,
+  	"sort" varchar,
+  	"sort_order" "enum_exports_sort_order",
+  	"drafts" "enum_exports_drafts" DEFAULT 'yes',
+  	"collection_slug" varchar NOT NULL,
+  	"where" jsonb DEFAULT '{}'::jsonb,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"url" varchar,
+  	"thumbnail_u_r_l" varchar,
+  	"filename" varchar,
+  	"mime_type" varchar,
+  	"filesize" numeric,
+  	"width" numeric,
+  	"height" numeric,
+  	"focal_x" numeric,
+  	"focal_y" numeric
+  );
+  
+  CREATE TABLE "exports_texts" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"order" integer NOT NULL,
+  	"parent_id" integer NOT NULL,
+  	"path" varchar NOT NULL,
+  	"text" varchar
+  );
+  
+  CREATE TABLE "imports" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"collection_slug" "enum_imports_collection_slug" NOT NULL,
+  	"import_mode" "enum_imports_import_mode",
+  	"match_field" varchar DEFAULT 'id',
+  	"status" "enum_imports_status" DEFAULT 'pending',
+  	"summary_imported" numeric,
+  	"summary_updated" numeric,
+  	"summary_total" numeric,
+  	"summary_issues" numeric,
+  	"summary_issue_details" jsonb,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"url" varchar,
+  	"thumbnail_u_r_l" varchar,
+  	"filename" varchar,
+  	"mime_type" varchar,
+  	"filesize" numeric,
+  	"width" numeric,
+  	"height" numeric,
+  	"focal_x" numeric,
+  	"focal_y" numeric
   );
   
   CREATE TABLE "payload_kv" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"key" varchar NOT NULL,
   	"data" jsonb NOT NULL
+  );
+  
+  CREATE TABLE "payload_jobs_log" (
+  	"_order" integer NOT NULL,
+  	"_parent_id" integer NOT NULL,
+  	"id" varchar PRIMARY KEY NOT NULL,
+  	"executed_at" timestamp(3) with time zone NOT NULL,
+  	"completed_at" timestamp(3) with time zone NOT NULL,
+  	"task_slug" "enum_payload_jobs_log_task_slug" NOT NULL,
+  	"task_i_d" varchar NOT NULL,
+  	"input" jsonb,
+  	"output" jsonb,
+  	"state" "enum_payload_jobs_log_state" NOT NULL,
+  	"error" jsonb
+  );
+  
+  CREATE TABLE "payload_jobs" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"input" jsonb,
+  	"completed_at" timestamp(3) with time zone,
+  	"total_tried" numeric DEFAULT 0,
+  	"has_error" boolean DEFAULT false,
+  	"error" jsonb,
+  	"task_slug" "enum_payload_jobs_task_slug",
+  	"queue" varchar DEFAULT 'default',
+  	"wait_until" timestamp(3) with time zone,
+  	"processing" boolean DEFAULT false,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
   );
   
   CREATE TABLE "payload_locked_documents" (
@@ -290,6 +395,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "agents" ADD CONSTRAINT "agents_avatar_id_media_id_fk" FOREIGN KEY ("avatar_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "agents_rels" ADD CONSTRAINT "agents_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."agents"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "agents_rels" ADD CONSTRAINT "agents_rels_taxonomy_fk" FOREIGN KEY ("taxonomy_id") REFERENCES "public"."taxonomy"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "taxonomy_breadcrumbs" ADD CONSTRAINT "taxonomy_breadcrumbs_doc_id_taxonomy_id_fk" FOREIGN KEY ("doc_id") REFERENCES "public"."taxonomy"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "taxonomy_breadcrumbs" ADD CONSTRAINT "taxonomy_breadcrumbs_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."taxonomy"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "taxonomy" ADD CONSTRAINT "taxonomy_parent_id_taxonomy_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."taxonomy"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "exports_texts" ADD CONSTRAINT "exports_texts_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."exports"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_jobs_log" ADD CONSTRAINT "payload_jobs_log_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."payload_jobs"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."payload_locked_documents"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_pages_fk" FOREIGN KEY ("pages_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_users_fk" FOREIGN KEY ("users_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
@@ -307,7 +417,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "pages_related_links_other_order_idx" ON "pages_related_links_other" USING btree ("_order");
   CREATE INDEX "pages_related_links_other_parent_id_idx" ON "pages_related_links_other" USING btree ("_parent_id");
   CREATE INDEX "pages_tenant_idx" ON "pages" USING btree ("tenant_id");
-  CREATE INDEX "pages_slug_idx" ON "pages" USING btree ("slug");
+  CREATE UNIQUE INDEX "pages_slug_idx" ON "pages" USING btree ("slug");
   CREATE INDEX "pages_external_id_idx" ON "pages" USING btree ("external_id");
   CREATE INDEX "pages_updated_at_idx" ON "pages" USING btree ("updated_at");
   CREATE INDEX "pages_created_at_idx" ON "pages" USING btree ("created_at");
@@ -363,10 +473,32 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "media_sizes_avatar_sizes_avatar_filename_idx" ON "media" USING btree ("sizes_avatar_filename");
   CREATE INDEX "media_sizes_small_sizes_small_filename_idx" ON "media" USING btree ("sizes_small_filename");
   CREATE INDEX "media_sizes_medium_sizes_medium_filename_idx" ON "media" USING btree ("sizes_medium_filename");
+  CREATE INDEX "taxonomy_breadcrumbs_order_idx" ON "taxonomy_breadcrumbs" USING btree ("_order");
+  CREATE INDEX "taxonomy_breadcrumbs_parent_id_idx" ON "taxonomy_breadcrumbs" USING btree ("_parent_id");
+  CREATE INDEX "taxonomy_breadcrumbs_doc_idx" ON "taxonomy_breadcrumbs" USING btree ("doc_id");
   CREATE UNIQUE INDEX "taxonomy_slug_idx" ON "taxonomy" USING btree ("slug");
+  CREATE INDEX "taxonomy_parent_idx" ON "taxonomy" USING btree ("parent_id");
   CREATE INDEX "taxonomy_updated_at_idx" ON "taxonomy" USING btree ("updated_at");
   CREATE INDEX "taxonomy_created_at_idx" ON "taxonomy" USING btree ("created_at");
+  CREATE INDEX "exports_updated_at_idx" ON "exports" USING btree ("updated_at");
+  CREATE INDEX "exports_created_at_idx" ON "exports" USING btree ("created_at");
+  CREATE UNIQUE INDEX "exports_filename_idx" ON "exports" USING btree ("filename");
+  CREATE INDEX "exports_texts_order_parent" ON "exports_texts" USING btree ("order","parent_id");
+  CREATE INDEX "imports_updated_at_idx" ON "imports" USING btree ("updated_at");
+  CREATE INDEX "imports_created_at_idx" ON "imports" USING btree ("created_at");
+  CREATE UNIQUE INDEX "imports_filename_idx" ON "imports" USING btree ("filename");
   CREATE UNIQUE INDEX "payload_kv_key_idx" ON "payload_kv" USING btree ("key");
+  CREATE INDEX "payload_jobs_log_order_idx" ON "payload_jobs_log" USING btree ("_order");
+  CREATE INDEX "payload_jobs_log_parent_id_idx" ON "payload_jobs_log" USING btree ("_parent_id");
+  CREATE INDEX "payload_jobs_completed_at_idx" ON "payload_jobs" USING btree ("completed_at");
+  CREATE INDEX "payload_jobs_total_tried_idx" ON "payload_jobs" USING btree ("total_tried");
+  CREATE INDEX "payload_jobs_has_error_idx" ON "payload_jobs" USING btree ("has_error");
+  CREATE INDEX "payload_jobs_task_slug_idx" ON "payload_jobs" USING btree ("task_slug");
+  CREATE INDEX "payload_jobs_queue_idx" ON "payload_jobs" USING btree ("queue");
+  CREATE INDEX "payload_jobs_wait_until_idx" ON "payload_jobs" USING btree ("wait_until");
+  CREATE INDEX "payload_jobs_processing_idx" ON "payload_jobs" USING btree ("processing");
+  CREATE INDEX "payload_jobs_updated_at_idx" ON "payload_jobs" USING btree ("updated_at");
+  CREATE INDEX "payload_jobs_created_at_idx" ON "payload_jobs" USING btree ("created_at");
   CREATE INDEX "payload_locked_documents_global_slug_idx" ON "payload_locked_documents" USING btree ("global_slug");
   CREATE INDEX "payload_locked_documents_updated_at_idx" ON "payload_locked_documents" USING btree ("updated_at");
   CREATE INDEX "payload_locked_documents_created_at_idx" ON "payload_locked_documents" USING btree ("created_at");
@@ -411,8 +543,14 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "agents" CASCADE;
   DROP TABLE "agents_rels" CASCADE;
   DROP TABLE "media" CASCADE;
+  DROP TABLE "taxonomy_breadcrumbs" CASCADE;
   DROP TABLE "taxonomy" CASCADE;
+  DROP TABLE "exports" CASCADE;
+  DROP TABLE "exports_texts" CASCADE;
+  DROP TABLE "imports" CASCADE;
   DROP TABLE "payload_kv" CASCADE;
+  DROP TABLE "payload_jobs_log" CASCADE;
+  DROP TABLE "payload_jobs" CASCADE;
   DROP TABLE "payload_locked_documents" CASCADE;
   DROP TABLE "payload_locked_documents_rels" CASCADE;
   DROP TABLE "payload_preferences" CASCADE;
@@ -421,5 +559,14 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TYPE "public"."enum_users_roles";
   DROP TYPE "public"."enum_users_tenants_roles";
   DROP TYPE "public"."enum_chat_sessions_status";
-  DROP TYPE "public"."enum_agents_search_collections";`)
+  DROP TYPE "public"."enum_agents_search_collections";
+  DROP TYPE "public"."enum_exports_format";
+  DROP TYPE "public"."enum_exports_sort_order";
+  DROP TYPE "public"."enum_exports_drafts";
+  DROP TYPE "public"."enum_imports_collection_slug";
+  DROP TYPE "public"."enum_imports_import_mode";
+  DROP TYPE "public"."enum_imports_status";
+  DROP TYPE "public"."enum_payload_jobs_log_task_slug";
+  DROP TYPE "public"."enum_payload_jobs_log_state";
+  DROP TYPE "public"."enum_payload_jobs_task_slug";`)
 }
