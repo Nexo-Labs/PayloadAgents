@@ -19,12 +19,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base.git",
+    "url": "git+https://github.com/Nexo-Labs/PayloadAgents.git",
     "directory": "packages/chat-agent"
   },
-  "homepage": "https://github.com/Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base/tree/main/packages/chat-agent#readme",
+  "homepage": "https://github.com/Nexo-Labs/PayloadAgents/tree/main/packages/chat-agent#readme",
   "bugs": {
-    "url": "https://github.com/Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base/issues"
+    "url": "https://github.com/Nexo-Labs/PayloadAgents/issues"
   },
   "sideEffects": [
     "*.css"

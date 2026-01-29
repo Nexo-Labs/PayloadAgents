@@ -10,7 +10,7 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Nexo-Labs/PayloadCMS-Keycloak-MultiTenancy-Base",
+    "url": "https://github.com/Nexo-Labs/PayloadAgents",
     "directory": "packages/payload-taxonomies"
   },
   "sideEffects": false,
