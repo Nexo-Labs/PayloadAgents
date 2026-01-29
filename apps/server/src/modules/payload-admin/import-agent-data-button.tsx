@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Button, useDocumentInfo, useField } from '@payloadcms/ui'
 import type { UIFieldClientComponent } from 'payload'
+import { importAgentData } from './import-agent-data-actions'
 
 interface ImportResult {
   success: boolean
@@ -11,8 +12,8 @@ interface ImportResult {
   dataFile?: string
   totalEntries?: number
   results?: {
-    imported: string[]
-    skipped: string[]
+    imported: number
+    skipped: number
     errors: string[]
   }
 }
@@ -36,17 +37,10 @@ export const ImportAgentDataButton: UIFieldClientComponent = () => {
     setResult(null)
 
     try {
-      const response = await fetch(`/api/agents/${id}/import-data`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      const data: ImportResult = await response.json()
+      const data = await importAgentData({ agentId: id })
       setResult(data)
 
-      if (data.success && data.results && data.results.imported.length > 0) {
+      if (data.success && data.results && data.results.imported > 0) {
         setTimeout(() => {
           setResult(null)
         }, 5000)
@@ -156,8 +150,8 @@ export const ImportAgentDataButton: UIFieldClientComponent = () => {
           >
             {result.success ? (
               <>
-                ✓ Archivo: {result.dataFile} | {result.results?.imported.length || 0} importados,{' '}
-                {result.results?.skipped.length || 0} existentes,{' '}
+                ✓ Archivo: {result.dataFile} | {result.results?.imported || 0} importados,{' '}
+                {result.results?.skipped || 0} existentes,{' '}
                 {result.results?.errors.length || 0} errores
               </>
             ) : (

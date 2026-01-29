@@ -2,7 +2,6 @@ import type { CollectionConfig, CollectionSlug } from 'payload'
 import { slugField } from 'payload'
 import { COLLECTION_SLUG_TAXONOMY } from '@nexo-labs/payload-taxonomies'
 import { importAgents } from './endpoints/importAgents'
-import { importAgentData } from './endpoints/importAgentData'
 import { afterChangeHook, afterDeleteHook } from './hooks'
 import { encryptApiKeyBeforeChange, decryptApiKeyAfterRead } from './security-hooks'
 
@@ -26,7 +25,7 @@ export const Agents: CollectionConfig = {
       },
     },
   },
-  endpoints: [importAgents, importAgentData],
+  endpoints: [importAgents],
   fields: [
     // UI field for import button - appears at the top of the edit form
     {

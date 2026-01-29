@@ -31,6 +31,13 @@ export default buildConfig({
       afterDashboard: ['@/modules/payload-admin/typesense-sync-widget'],
     },
   },
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+  csrf: [
+    'http://localhost:3000',
+  ],
+  cors: [
+    'http://localhost:3000',
+  ],
   collections: [Pages, Users, Tenants, ChatSessions, Agents, Media, Taxonomies],
   db: postgresAdapter({
     push: false,
